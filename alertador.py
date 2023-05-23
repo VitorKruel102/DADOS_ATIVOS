@@ -1,0 +1,169 @@
+import os 
+import pandas as pd
+
+DIRETORIO_INTRADAY = r'D:\DADOS_FINANCEIROS\Database_PrincipaisAcoes'
+DIRETORIO_DIARIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_NA'
+DIRETORIO_DIARIO_SEM_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario'
+
+REGISTROS = {
+    'Data': [],
+    'Ticker' : [],
+    'Abertura_Diario': [],
+    'Abertura_Minuto': [],
+    'Diferenca_Abertura': [],
+    'Fechamento_Diario': [],
+    'Fechamento_Minuto': [],
+    'Diferenca_Fechamento': [],
+    'Moda': [],
+    'Problema': [],
+}
+
+DADOS_ESTATISTICOS = {
+    'Ticker': [],
+    'Periodo_Inicial': [],
+    'Periodo_Final': [],
+    'Total_dias': [],
+    'Dias_com_Erros': [],
+    'Percentual_Integridade': [],
+}
+
+ERROS = {
+    'Ticker': [],
+    'Motivo': [],
+    'Data': [],
+}
+
+
+for path, dir, files in os.walk(DIRETORIO_INTRADAY):
+    for file in files:
+        ativo = file.split('_')[0]
+        print(ativo)
+
+        df_intraday = pd.read_csv(os.path.join(DIRETORIO_INTRADAY, file), sep=';')
+        periodo_dados = len(df_intraday['<date>'].unique())
+        
+        for data in df_intraday['<date>'].unique():
+            df_intraday_unique = df_intraday[df_intraday['<date>'] == data]
+            
+            if data < 20211013:                
+                df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_AJUSTADO, f'{ativo}_DIARIO_NA.csv'), sep=';')
+                is_adjusted = True
+            elif data == 20211013:
+                df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
+                is_adjusted = False
+                
+                df = pd.DataFrame(REGISTROS)
+                moda_diferenca_abertura = df['Diferenca_Abertura'].mode()[0]
+                print(moda_diferenca_abertura)
+                print(df)
+                df = df[df['Diferenca_Abertura'] != moda_diferenca_abertura]
+                df['Moda'] = moda_diferenca_abertura
+                REGISTROS = df.to_dict('list')
+                if len(REGISTROS['Data']) == 0:
+                    REGISTROS = {
+                        item: []
+                        for item in df.to_dict()
+                    }
+            else:
+                df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
+                is_adjusted = False
+                
+            df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
+            df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
+            df_diario['Data'] = df_diario['Data'].astype(int)
+
+            df_diario_filtrado = df_diario[df_diario['Data'] == data] 
+
+            try:
+                abertura_diario = round(df_diario_filtrado['Abertura'].iloc()[0], 2)
+                fechamento_diario = round(df_diario_filtrado['Fechamento'].iloc()[0], 2)
+                abertura_intraday = round(df_intraday_unique['<open>'].iloc()[0], 2)
+                fechamento_intraday = round(df_intraday_unique['<close>'].iloc()[-1], 2)
+            except IndexError as err:
+                ERROS['Ticker'].append(ativo)
+                ERROS['Motivo'].append(err)
+                ERROS['Data'].append(data)
+            
+            if (abertura_intraday == abertura_diario) and (fechamento_intraday == fechamento_diario):
+                continue
+            else:
+                REGISTROS['Data'].append(data)
+                REGISTROS['Ticker'].append(ativo)
+                REGISTROS['Abertura_Diario'].append(abertura_diario)
+                REGISTROS['Abertura_Minuto'].append(abertura_intraday)
+                REGISTROS['Diferenca_Abertura'].append(round(abertura_diario / abertura_intraday, 3))
+                REGISTROS['Fechamento_Diario'].append(fechamento_diario)
+                REGISTROS['Fechamento_Minuto'].append(fechamento_intraday)
+                REGISTROS['Diferenca_Fechamento'].append(round(fechamento_diario / fechamento_intraday, 3))
+                
+
+                if is_adjusted:
+                    REGISTROS['Problema'].append('Ajustado')
+                    REGISTROS['Moda'].append(0)
+                else:
+                    REGISTROS['Problema'].append('Nao_Ajustado')
+                    REGISTROS['Moda'].append(1)
+
+        df = pd.DataFrame(REGISTROS)
+        periodo_com_problemas = df.shape[0]
+        if periodo_com_problemas == 0: 
+            continue
+        
+        df_intraday['<date>'] = df_intraday['<date>'].astype(str)
+        df_intraday['<date>'] = pd.to_datetime(df_intraday['<date>'])
+
+        DADOS_ESTATISTICOS['Ticker'].append(ativo)
+        DADOS_ESTATISTICOS['Periodo_Inicial'].append(df_intraday['<date>'].min())
+        DADOS_ESTATISTICOS['Periodo_Final'].append(df_intraday['<date>'].max())
+        DADOS_ESTATISTICOS['Total_dias'].append(df_intraday['<date>'].max() - df_intraday['<date>'].min())
+        DADOS_ESTATISTICOS['Dias_com_Erros'].append(periodo_com_problemas)
+        DADOS_ESTATISTICOS['Percentual_Integridade'].append(round(((periodo_dados - periodo_com_problemas) / periodo_dados) * 100, 2))
+
+        PATH = r'C:\Users\diaxt\Desktop\SEMATIZA\DADOS_ALERTADO'
+        df.to_csv(os.path.join(PATH, f'{ativo}_estudo.csv'), sep=';', index=False)
+
+        for colunas in REGISTROS.keys():
+            REGISTROS[colunas].clear()
+
+df = pd.DataFrame(DADOS_ESTATISTICOS)                
+PATH = r'C:\Users\diaxt\Desktop\SEMATIZA\DADOS_ALERTADO'
+df.to_csv(os.path.join(PATH, f'Estatistica_Tickes.csv'), sep=';', index=False)
+
+for colunas in DADOS_ESTATISTICOS.keys():
+    DADOS_ESTATISTICOS[colunas].clear()
+
+print(ERROS)
+    
+def comparacao_volume_abertura():
+    """."""
+    ARQUIVO_B3 = r'D:\DADOS_FINANCEIROS\Database_PrincipaisAcoes\ABEV3_BMF_I.csv'
+    DADOS = {
+        '<data>': [],
+        '<ticker>': [],
+        '<volume_abertura>': [],
+        '<volume_segundo>': [],
+        '<comparacao>': [],
+    }
+
+    df_arquivo = pd.read_csv(ARQUIVO_B3, sep=';')
+    print(df_arquivo)
+    for data in df_arquivo['<date>'].unique():
+        df_filtro = df_arquivo[df_arquivo['<date>'] == data]
+
+        volume_abertura = df_filtro['<vol>'].iloc[0]
+        volume_segundo = df_filtro['<vol>'].iloc[1]
+        comparacao = volume_abertura / volume_segundo
+
+        DADOS['<data>'].append(data)
+        DADOS['<ticker>'].append(df_filtro['<ticker>'].iloc[0])
+        DADOS['<volume_abertura>'].append(volume_abertura)
+        DADOS['<volume_segundo>'].append(volume_segundo)
+        DADOS['<comparacao>'].append(comparacao)
+
+
+    df_comparacao = pd.DataFrame(DADOS)
+    print(df_comparacao)
+    df_comparacao.to_csv(os.path.join(r'C:\Users\diaxt\Desktop\SEMATIZA',  'comparacao.csv'), sep=';', index=False)
+
+
+
