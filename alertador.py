@@ -1,9 +1,40 @@
 import os 
 import pandas as pd
+from pandas_market_calendars import get_calendar
 
 DIRETORIO_INTRADAY = r'D:\DADOS_FINANCEIROS\Database_PrincipaisAcoes'
 DIRETORIO_DIARIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_NA'
 DIRETORIO_DIARIO_SEM_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario'
+
+FERIADOS_B3 = [
+    '2018-01-01',  '2018-01-25',  '2018-02-12',  '2018-02-13',
+    '2018-03-30',  '2018-05-01',  '2018-05-31',  '2018-07-09',
+    '2018-09-07',  '2018-10-12',  '2018-11-02',  '2018-11-15',
+    '2018-11-20'   '2018-12-24',  '2018-12-25',  '2018-12-31',  
+    '2019-01-01',  '2019-01-25',  '2019-03-04',  '2019-03-05',  
+    '2019-04-19',  '2019-05-01',  '2019-06-20',  '2019-07-09',  
+    '2019-11-15',  '2019-11-20',  '2019-12-24',  '2019-12-25',  
+    '2019-12-31',  '2020-01-01',  '2020-02-24',  '2020-02-25',  
+    '2020-04-10',  '2020-04-21',  '2020-05-01',  '2020-06-11',  
+    '2020-09-07',  '2020-10-12',  '2020-11-02',  '2020-12-24',  
+    '2020-12-25',  '2020-12-31',  '2021-01-01',  '2021-01-25',  
+    '2021-02-15',  '2021-02-16',  '2021-04-02',  '2021-04-21',  
+    '2021-06-03',  '2021-09-07',  '2021-10-12',  '2021-11-02',  
+    '2021-11-15',  '2021-12-24',  '2021-12-31',  '2022-01-01',  
+    '2022-01-25',  '2022-02-28',  '2022-03-01',  '2022-03-02',  
+    '2022-04-15',  '2022-04-21',  '2022-06-16',  '2022-09-07',  
+    '2022-10-12',  '2022-11-02',  '2022-11-15',  '2022-12-25',  
+    '2022-12-30',  '2022-12-31',  '2023-02-20',  '2023-02-21',  
+    '2023-04-07',  '2023-04-21',  '2023-05-01',  '2023-06-06',  
+    '2023-09-07',  '2023-10-12',  '2023-11-15',  '2023-12-25',  
+    '2023-12-29',
+]
+
+DIAS_DE_ABERTURAS_A_TARDE = [
+    '2018-02-14', '2019-03-06', '2020-02-26', '2020-02-26', 
+    '2021-02-17', '2022-03-03', '2023-02-22',
+]
+
 
 REGISTROS = {
     'Data': [],
@@ -40,15 +71,30 @@ for path, dir, files in os.walk(DIRETORIO_INTRADAY):
         print(ativo)
 
         df_intraday = pd.read_csv(os.path.join(DIRETORIO_INTRADAY, file), sep=';')
-        periodo_dados = len(df_intraday['<date>'].unique())
+        periodo_dados = len(df_intraday['<date>'].iloc[1:].unique())
         
-        for data in df_intraday['<date>'].unique():
-            df_intraday_unique = df_intraday[df_intraday['<date>'] == data]
-            
-            if data < 20211013:                
+        primeiro_dia_interesse = df_intraday['<date>'].iloc[1]
+        
+        b3_calendar = get_calendar('B3')
+        # Definir o intervalo de datas desejado
+        start_date = primeiro_dia_interesse
+        end_date = '2023-05-02'
+        # Obter o calendário de negociações
+        schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
+        # Exibir o calendário de negociações
+        dias_uteis = list(schedule.index.astype(str)) 
+        
+        for dia in dias_uteis:
+            dia_int = int(dia.replace('-', ''))
+            df_intraday_unique = df_intraday[df_intraday['<date>'] == dia_int]
+
+            if dia in FERIADOS_B3:
+                continue
+
+            if dia_int < 20211013:                
                 df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_AJUSTADO, f'{ativo}_DIARIO_NA.csv'), sep=';')
                 is_adjusted = True
-            elif data == 20211013:
+            elif dia_int == 20211013:
                 df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
                 is_adjusted = False
                 
@@ -67,12 +113,30 @@ for path, dir, files in os.walk(DIRETORIO_INTRADAY):
             else:
                 df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
                 is_adjusted = False
+
+
+            if df_intraday_unique.shape[0] == 0:
+                REGISTROS['Data'].append(dia_int)
+                REGISTROS['Ticker'].append(ativo)
+                REGISTROS['Abertura_Diario'].append(abertura_diario)
+                REGISTROS['Abertura_Minuto'].append(0)
+                REGISTROS['Diferenca_Abertura'].append(0)
+                REGISTROS['Fechamento_Diario'].append(fechamento_diario)
+                REGISTROS['Fechamento_Minuto'].append(0)
+                REGISTROS['Diferenca_Fechamento'].append(0)
+                
+                if is_adjusted:
+                    REGISTROS['Problema'].append('Ajustado')
+                    REGISTROS['Moda'].append(0)
+                else:
+                    REGISTROS['Problema'].append('Nao_Ajustado')
+                    REGISTROS['Moda'].append(1)                
                 
             df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
             df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
             df_diario['Data'] = df_diario['Data'].astype(int)
 
-            df_diario_filtrado = df_diario[df_diario['Data'] == data] 
+            df_diario_filtrado = df_diario[df_diario['Data'] == dia_int] 
 
             try:
                 abertura_diario = round(df_diario_filtrado['Abertura'].iloc()[0], 2)
@@ -82,12 +146,12 @@ for path, dir, files in os.walk(DIRETORIO_INTRADAY):
             except IndexError as err:
                 ERROS['Ticker'].append(ativo)
                 ERROS['Motivo'].append(err)
-                ERROS['Data'].append(data)
+                ERROS['Data'].append(dia_int)
             
             if (abertura_intraday == abertura_diario) and (fechamento_intraday == fechamento_diario):
                 continue
             else:
-                REGISTROS['Data'].append(data)
+                REGISTROS['Data'].append(dia_int)
                 REGISTROS['Ticker'].append(ativo)
                 REGISTROS['Abertura_Diario'].append(abertura_diario)
                 REGISTROS['Abertura_Minuto'].append(abertura_intraday)
@@ -96,7 +160,6 @@ for path, dir, files in os.walk(DIRETORIO_INTRADAY):
                 REGISTROS['Fechamento_Minuto'].append(fechamento_intraday)
                 REGISTROS['Diferenca_Fechamento'].append(round(fechamento_diario / fechamento_intraday, 3))
                 
-
                 if is_adjusted:
                     REGISTROS['Problema'].append('Ajustado')
                     REGISTROS['Moda'].append(0)
