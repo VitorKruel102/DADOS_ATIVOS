@@ -54,7 +54,7 @@ DADOS = {
     acoes: {
         tempo: {
             'DADOS_INTERESSE': [0, 0, 0, 0], #Candles, Buracos, Max_Buracos, Seq_Atual_Buracos
-            'CABECARIO': ['Data', 'Hora', 'O', 'H', 'L', 'C', 'TEM_BURACO?'],
+            'CABECARIO': ['Data', 'Hora', 'O', 'H', 'L', 'C'],
             'COTACOES': [],
             'TEMPO_ULTIMO_CANDLE': HORA_ABERTURA
         }
@@ -108,11 +108,13 @@ def close_market(date):
         return 1655
 
 
-def horario_abertura(hh) -> int():
-    """Retorna a hora de abertura em HHMM."""
-    if str(hh)[:2] == 10:
-        return 1030
-    return 1330
+def dias_uteis_b3(start_date, end_date, tipo_calendario='B3') -> list():
+    """Retorna os dias úteis do mercado brasileiro."""
+    b3_calendar = get_calendar(tipo_calendario)
+    # Obter o calendário de negociações
+    schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
+    # Exibir o calendário de negociações
+    return list(schedule.index.astype(str)) 
 
 
 def sematiza_diario():
@@ -131,17 +133,13 @@ def sematiza_diario():
 
             for ticker in df_diario['<ticker>'].unique():            
                 df_diario_ticker = df_diario[df_diario['<ticker>'] == ticker] 
-                #.strftime("%Y-%m-%d"))
-                primeiro_dia_interesse = str(df_diario_ticker['<date>'].iloc[1])
+                primeiro_dia_interesse = datetime.strptime(str(df_diario_ticker['<date>'].iloc[0]), "%Y%m%d").strftime("%Y-%m-%d")
+                ultimo_dia_interesse = datetime.strptime(str(df_diario_ticker['<date>'].iloc[-1]), "%Y%m%d").strftime("%Y-%m-%d")
                 
-                b3_calendar = get_calendar('B3')
-                # Definir o intervalo de datas desejado
-                start_date = datetime.strptime(primeiro_dia_interesse, "%Y%m%d").strftime("%Y-%m-%d")
-                end_date = '2023-05-02'
-                # Obter o calendário de negociações
-                schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
-                # Exibir o calendário de negociações
-                dias_uteis = list(schedule.index.astype(str)) 
+                dias_uteis = dias_uteis_b3(
+                    primeiro_dia_interesse, 
+                    ultimo_dia_interesse
+                )
                 
                 for dia in dias_uteis:
                     dia_int = int(dia.replace('-', ''))
@@ -172,7 +170,6 @@ def sematiza_diario():
                                     ultimo_fechamento_registrado, 
                                     ultimo_fechamento_registrado, 
                                     ultimo_fechamento_registrado,
-                                    1
                                 ]
                             )
                         continue
@@ -190,8 +187,7 @@ def sematiza_diario():
                             abertura, 
                             maxima, 
                             minima, 
-                            fechamento,
-                            0
+                            fechamento
                         ]
                             
                     )
@@ -232,42 +228,38 @@ def intraday():
     HORA_ABERTURA = 1030
     for tempo in TEMPOS_INTRADAY:
         if len(str(tempo)) == 1:
-            nome_arquivo = f'0{tempo}_MINUTO.csv'
+            nome_pasta = f'0{tempo}_MINUTO'
+            tempo_grafico_interesse = f'0{tempo}_MINUTO'
         else:
-            nome_arquivo = f'{tempo}_MINUTO.csv'
+            nome_pasta = f'{tempo}_MINUTO'
+            tempo_grafico_interesse = f'{tempo}_MINUTO'
 
-        print(nome_arquivo)
-        os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
-        df_minuto = pd.read_csv(nome_arquivo, sep=';')
-        df_minuto['<time>'] = df_minuto['<time>'] // 100
+        for ticker in ATIVOS:
+            print(nome_arquivo)
+            os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
+            nome_arquivo = os.path.join(DIRETORIO_TEMPOS_GRAFICOS, nome_pasta, f'{ticker}_{tempo_grafico_interesse}.csv')
+            df_minuto = pd.read_csv(nome_arquivo, sep=';')
+            df_minuto['<time>'] = df_minuto['<time>'] // 100
 
-        for ticker in df_minuto['<ticker>'].unique():
-            if ticker not in ATIVOS:
-                continue
+            df_minuto['<date>'] = pd.to_datetime(df_minuto['<date>'], format='%Y%m%d').dt.strftime('%Y-%m-%d')
+
+            primeiro_dia_interesse = df_minuto['<date>'].iloc[1]
+            ultimo_dia_interesse = df_minuto['<date>'].iloc[-1]
             
-            df_minuto_ticker = df_minuto[df_minuto['<ticker>'] == ticker] 
-            df_minuto_ticker['<date>'] = pd.to_datetime(df_minuto_ticker['<date>'], format='%Y%m%d').dt.strftime('%Y-%m-%d')
-            #.strftime("%Y-%m-%d"))
-            primeiro_dia_interesse = df_minuto_ticker['<date>'].iloc[1]
-            
-            b3_calendar = get_calendar('B3')
-            # Definir o intervalo de datas desejado
-            start_date = primeiro_dia_interesse
-            end_date = '2023-05-02'
-            # Obter o calendário de negociações
-            schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
-            # Exibir o calendário de negociações
-            dias_uteis = list(schedule.index.astype(str)) 
+            dias_uteis = dias_uteis_b3(
+                primeiro_dia_interesse, 
+                ultimo_dia_interesse
+            )
             
             for dia in dias_uteis:
-                df_minuto_filtrado = df_minuto_ticker[df_minuto_ticker['<date>'] == dia]
+                df_minuto_filtrado = df_minuto[df_minuto['<date>'] == dia]
                 dia_int = int(dia.replace('-', ''))
                 
                 if dia in DIAS_DE_ABERTURAS_A_TARDE:
-                    DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = 1300
+                    DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = 1330
                     time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
                     df_minuto_filtrado = df_minuto_filtrado[
-                        (df_minuto_filtrado['<time>'] >= 1300) & 
+                        (df_minuto_filtrado['<time>'] >= 1330) & 
                         (df_minuto_filtrado['<time>'] <= (close_market(dia_int) - 25))
                     ]
                 else:
@@ -296,20 +288,16 @@ def intraday():
 
                                 ultima_data_registrada = str(dia_int)
                                 ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
-                                ultima_abertura_registrada = DADOS[ticker][tempo]['COTACOES'][-1][2]
-                                ultima_maxima_registra = DADOS[ticker][tempo]['COTACOES'][-1][3]
-                                ultima_minima_registrada = DADOS[ticker][tempo]['COTACOES'][-1][4]
                                 ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
                                 
                                 DADOS[ticker][tempo]['COTACOES'].append(
                                     [
                                         ultima_data_registrada, 
                                         ultimo_time_registrado, 
-                                        ultima_abertura_registrada, 
-                                        ultima_maxima_registra, 
-                                        ultima_minima_registrada, 
+                                        ultimo_fechamento_registrado, 
+                                        ultimo_fechamento_registrado, 
+                                        ultimo_fechamento_registrado, 
                                         ultimo_fechamento_registrado,
-                                        1
                                     ]
                                 )
                                 DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
@@ -334,20 +322,16 @@ def intraday():
 
                             ultima_data_registrada = str(dia_int)
                             ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
-                            ultima_abertura_registrada = DADOS[ticker][tempo]['COTACOES'][-1][2]
-                            ultima_maxima_registra = DADOS[ticker][tempo]['COTACOES'][-1][3]
-                            ultima_minima_registrada = DADOS[ticker][tempo]['COTACOES'][-1][4]
                             ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
                             
                             DADOS[ticker][tempo]['COTACOES'].append(
                                 [
                                     ultima_data_registrada, 
                                     ultimo_time_registrado, 
-                                    ultima_abertura_registrada, 
-                                    ultima_maxima_registra, 
-                                    ultima_minima_registrada, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado, 
                                     ultimo_fechamento_registrado,
-                                    1
                                 ]
                             )
                             DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
@@ -368,7 +352,6 @@ def intraday():
                             maxima, 
                             minima, 
                             fechamento,
-                            0
                         ]
                             
                     )
@@ -383,7 +366,7 @@ def intraday():
 
                     DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0 
 
-                    
+                        
         for ticker in ATIVOS:
             if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
                 os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
@@ -399,9 +382,8 @@ def intraday():
                 spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
                 for dados in DADOS[ticker][tempo]['COTACOES']:
                     spanrows.writerow(dados)
-
-
             print('FIM')
+
 
 
 if __name__ == '__main__':
