@@ -78,7 +78,7 @@ for path, dir, files in os.walk(DIRETORIO_INTRADAY):
         b3_calendar = get_calendar('B3')
         # Definir o intervalo de datas desejado
         start_date = primeiro_dia_interesse
-        end_date = '2023-05-02'
+        end_date = '2023-05-30'
         # Obter o calendário de negociações
         schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
         # Exibir o calendário de negociações
@@ -114,7 +114,8 @@ for path, dir, files in os.walk(DIRETORIO_INTRADAY):
                 df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
                 is_adjusted = False
 
-
+            abertura_diario = df_diario['Abertura']
+            fechamento_diario = df_diario['Fechamento']
             if df_intraday_unique.shape[0] == 0:
                 REGISTROS['Data'].append(dia_int)
                 REGISTROS['Ticker'].append(ativo)
@@ -147,6 +148,7 @@ for path, dir, files in os.walk(DIRETORIO_INTRADAY):
                 ERROS['Ticker'].append(ativo)
                 ERROS['Motivo'].append(err)
                 ERROS['Data'].append(dia_int)
+                
             
             if (abertura_intraday == abertura_diario) and (fechamento_intraday == fechamento_diario):
                 continue

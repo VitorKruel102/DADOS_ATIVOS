@@ -15,7 +15,7 @@ from pandas_market_calendars import get_calendar
     'EQTL3',   'BRAP4',   'HAPV3',   'ABEV3',   'MGLU3',   'PRIO3',   'CRFB3',   'NTCO3',   'CPFE3',   'CMIG3',   'SAPR11',  'MTSA3',   'LIPR3',
     'VSTE3',   'JBSS3',   'GFSA3',   'KLBN4',   'USIM5',   'CSAN3',   'BEES3',   'AZUL4',   'TCSA3',   'MULT3',   'DASA3',   'LREN3',
 ]"""
-ATIVOS = ['ABEV3'] # 'ITUB4',   'ITSA4',   'BRFS3',   'B3SA3',   'LOGG3', 'VALE3', 'PETR3', 'BBSE3', 'PETR4',  
+ATIVOS = ['BOVA11', 'BBDC4',  'GGBR4',   'USIM5',   'GOAU4',   'CSNA3', 'CSAN3', 'BRKM5']# 'ABEV3', 'ITUB4',   'ITSA4',   'BRFS3',   'B3SA3',   'LOGG3', 'VALE3', 'PETR3', 'BBSE3', 'PETR4',  
 
 FERIADOS_B3 = [
     '2018-01-01',  '2018-01-25',  '2018-02-12',  '2018-02-13',
@@ -121,109 +121,108 @@ def sematiza_diario():
     
     HORA_ABERTURA = 1030
     for tempo in TEMPOS_DIARIOS:
-        nome_arquivo = f'{tempo}.csv'
+        nome_pasta = tempo
+        tempo_grafico_interesse = tempo
 
-        print(nome_arquivo)
-        os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
-        df_diario = pd.read_csv(nome_arquivo, sep=';')
+        for ativo in ATIVOS:
+            nome_arquivo = os.path.join(DIRETORIO_TEMPOS_GRAFICOS, nome_pasta, f'{ativo}_{tempo_grafico_interesse}.csv')
+            os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
+            df_diario = pd.read_csv(nome_arquivo, sep=';')
 
-        for ticker in df_diario['<ticker>'].unique():
-            if ticker not in ATIVOS:
-                continue
-            
-            df_diario_ticker = df_diario[df_diario['<ticker>'] == ticker] 
-            df_diario_ticker['<date>'] = pd.to_datetime(df_diario_ticker['<date>'], format='%Y%m%d').dt.strftime('%Y-%m-%d')
-            #.strftime("%Y-%m-%d"))
-            primeiro_dia_interesse = df_diario_ticker['<date>'].iloc[1]
-            
-            b3_calendar = get_calendar('B3')
-            # Definir o intervalo de datas desejado
-            start_date = primeiro_dia_interesse
-            end_date = '2023-05-02'
-            # Obter o calendário de negociações
-            schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
-            # Exibir o calendário de negociações
-            dias_uteis = list(schedule.index.astype(str)) 
-            
-            for dia in dias_uteis:
-                dia_int = int(dia.replace('-', ''))
-                df_diario_filtrado = df_diario_ticker[df_diario_ticker['<date>'] == dia_int]
-
-                if dia in FERIADOS_B3:
-                    continue
-
-                if df_diario_filtrado['<date>'].shape[0] == 0:
-                    if len(DADOS[ticker][tempo]['COTACOES']) == 0:
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1
-                    else:
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1         
-
-                        ultima_data_registrada = str(dia_int)
-                        ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
-                        ultima_abertura_registrada = DADOS[ticker][tempo]['COTACOES'][-1][2]
-                        ultima_maxima_registra = DADOS[ticker][tempo]['COTACOES'][-1][3]
-                        ultima_minima_registrada = DADOS[ticker][tempo]['COTACOES'][-1][4]
-                        ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
-                        
-                        DADOS[ticker][tempo]['COTACOES'].append(
-                            [
-                                ultima_data_registrada, 
-                                ultimo_time_registrado, 
-                                ultima_abertura_registrada, 
-                                ultima_maxima_registra, 
-                                ultima_minima_registrada, 
-                                ultimo_fechamento_registrado,
-                                1
-                            ]
-                        )
-                    continue
+            for ticker in df_diario['<ticker>'].unique():            
+                df_diario_ticker = df_diario[df_diario['<ticker>'] == ticker] 
+                #.strftime("%Y-%m-%d"))
+                primeiro_dia_interesse = str(df_diario_ticker['<date>'].iloc[1])
                 
-                abertura = df_diario_filtrado['<open>'].iloc[0]
-                fechamento = df_diario_filtrado['<close>'].iloc[0]
-                maxima = df_diario_filtrado['<high>'].iloc[0]
-                minima = df_diario_filtrado['<low>'].iloc[0]
-
-                DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
-                DADOS[ticker][tempo]['COTACOES'].append(
-                    [
-                        str(dia_int), 
-                        time_atual, 
-                        abertura, 
-                        maxima, 
-                        minima, 
-                        fechamento,
-                        0
-                    ]
-                        
-                )
+                b3_calendar = get_calendar('B3')
+                # Definir o intervalo de datas desejado
+                start_date = datetime.strptime(primeiro_dia_interesse, "%Y%m%d").strftime("%Y-%m-%d")
+                end_date = '2023-05-02'
+                # Obter o calendário de negociações
+                schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
+                # Exibir o calendário de negociações
+                dias_uteis = list(schedule.index.astype(str)) 
                 
-                maior_sequencia_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][2]
-                sequencia_atual_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
+                for dia in dias_uteis:
+                    dia_int = int(dia.replace('-', ''))
+                    df_diario_filtrado = df_diario_ticker[df_diario_ticker['<date>'] == dia_int]
 
-                if maior_sequencia_buraco < sequencia_atual_buraco:
-                    DADOS[ticker][tempo]['DADOS_INTERESSE'][2] = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
+                    if dia in FERIADOS_B3:
+                        continue
 
-                DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0 
+                    if df_diario_filtrado['<date>'].shape[0] == 0:
+                        if len(DADOS[ticker][tempo]['COTACOES']) == 0:
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1
+                        else:
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1         
 
+                            ultima_data_registrada = str(dia_int)
+                            ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
+                            ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
+                            
+                            DADOS[ticker][tempo]['COTACOES'].append(
+                                [
+                                    ultima_data_registrada, 
+                                    ultimo_time_registrado, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado,
+                                    1
+                                ]
+                            )
+                        continue
                     
-        for ticker in ATIVOS: 
-            with open(os.path.join(PATH_SEMATIZA, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
-                spanrows = csv.writer(csvfile, delimiter=',')
-                spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
-                spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
-                spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
-                spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
-                csvfile.close()
-            with open(os.path.join(PATH_SEMATIZA, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
-                spanrows = csv.writer(csvfile, delimiter='\t')
-                for dados in DADOS[ticker][tempo]['COTACOES']:
-                    spanrows.writerow(dados)
+                    abertura = df_diario_filtrado['<open>'].iloc[0]
+                    fechamento = df_diario_filtrado['<close>'].iloc[0]
+                    maxima = df_diario_filtrado['<high>'].iloc[0]
+                    minima = df_diario_filtrado['<low>'].iloc[0]
 
-            print('FIM')
+                    DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                    DADOS[ticker][tempo]['COTACOES'].append(
+                        [
+                            str(dia_int), 
+                            '1200', 
+                            abertura, 
+                            maxima, 
+                            minima, 
+                            fechamento,
+                            0
+                        ]
+                            
+                    )
+                    
+                    maior_sequencia_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][2]
+                    sequencia_atual_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
+
+                    if maior_sequencia_buraco < sequencia_atual_buraco:
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][2] = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
+
+                    DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0 
+
+                        
+            for ticker in ATIVOS:
+                if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
+                    os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
+
+                with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
+                    spanrows = csv.writer(csvfile, delimiter=',')
+                    spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
+                    spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
+                    spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
+                    csvfile.close()
+                with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
+                    spanrows = csv.writer(csvfile, delimiter='\t')
+                    spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
+                    for dados in DADOS[ticker][tempo]['COTACOES']:
+                        spanrows.writerow(dados)
+
+
+                print('FIM')
 
 
 def intraday():
@@ -385,22 +384,26 @@ def intraday():
                     DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0 
 
                     
-        for ticker in ATIVOS: 
-            with open(os.path.join(PATH_SEMATIZA, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
+        for ticker in ATIVOS:
+            if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
+                os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
+
+            with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
                 spanrows = csv.writer(csvfile, delimiter=',')
                 spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
                 spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
                 spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
-                spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
                 csvfile.close()
-            with open(os.path.join(PATH_SEMATIZA, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
+            with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
                 spanrows = csv.writer(csvfile, delimiter='\t')
+                spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
                 for dados in DADOS[ticker][tempo]['COTACOES']:
                     spanrows.writerow(dados)
+
 
             print('FIM')
 
 
 if __name__ == '__main__':
-    #sematiza_diario()
+    sematiza_diario()
     intraday()

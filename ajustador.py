@@ -1,8 +1,9 @@
 import os 
 import pandas as pd
+from pprint import pprint
 
 
-DIRETORIO_DIARIO = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_NA'
+DIRETORIO_DIARIO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'
 DIRETORIO_SEM_AJUSTE_MINUTO = r'D:\DADOS_FINANCEIROS\Database_Minuto'
 DIRETORIO_AJUSTADO = r'C:\Users\diaxt\Desktop\SEMATIZA\MINUTO_AJUSTADO'
 
@@ -20,8 +21,10 @@ ATIVOS_INTERESSE = [
     'VIVT3',  'ASAI3',  'ALSO3',  'LWSA3',  'BPAN4',  'PETZ3',  'CASH3',  'CMIN3',
     'SOMA3',  'POSI3',  'RRRP3',  'SLCE3',  'GGBR4',  'EGIE3',  'NTCO3',  'B3SA3',
     'AMER3',  'SYNE3',  'DXCO3',  'TIMS3',  'COGN3',  'YDUQ3',  'RAIL3',  'VIIA3',
-    'VBBR3',  'ALPA4',  'JHSF3',
+    'VBBR3',  'ALPA4',  'JHSF3',  'BOVA11',
 ]
+
+ATIVOS_INTERESSE = ['BOVA11', 'BBDC4',  'GGBR4',   'USIM5',   'GOAU4',   'CSNA3', 'CSAN3', 'BRKM5']
 
 DADOS = {
     '<ticker>': [],
@@ -48,11 +51,9 @@ def ajustador():
     for ativo in ATIVOS_INTERESSE:
         ...
         arquivo_minuto = os.path.join(DIRETORIO_SEM_AJUSTE_MINUTO, f'{ativo}_BMF_I.csv')
-        arquivo_diario = os.path.join(DIRETORIO_DIARIO, f'{ativo}_DIARIO_NA.csv')
+        arquivo_diario = os.path.join(DIRETORIO_DIARIO, f'{ativo}_DIARIO_NAS.csv')
 
         df_diario = pd.read_csv(arquivo_diario, sep=';')
-        df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
-        df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
         df_diario['Data'] = df_diario['Data'].astype(int)
 
         df_minuto = pd.read_csv(arquivo_minuto, sep=';')
@@ -91,7 +92,7 @@ def ajustador():
         for colunas in DADOS.keys():
             DADOS[colunas].clear()
         
-    print(ERROS)
+    pprint(ERROS)
 
     
 ajustador()

@@ -1,7 +1,9 @@
 import csv
 import os
 from pandas_market_calendars import get_calendar
+import pandas as pd
 
+from datetime import datetime
 
 """ATIVOS = [
     'BBSE3',   'ENGI11',  'EGIE3',   'ITUB4',   'ITSA4',   'BRFS3',   'PRIO3',   'LOGG3',   'BEEF3',   'GGBR4',   'OIBR4',   'TELB3',   'CCRO3',
@@ -14,7 +16,16 @@ from pandas_market_calendars import get_calendar
     'EQTL3',   'BRAP4',   'HAPV3',   'ABEV3',   'MGLU3',   'PRIO3',   'CRFB3',   'NTCO3',   'CPFE3',   'CMIG3',   'SAPR11',  'MTSA3',   'LIPR3',
     'VSTE3',   'JBSS3',   'GFSA3',   'KLBN4',   'USIM5',   'CSAN3',   'BEES3',   'AZUL4',   'TCSA3',   'MULT3',   'DASA3',   'LREN3',
 ]"""
-ATIVOS = ['ABEV3'] # 'ITUB4',   'ITSA4',   'BRFS3',   'B3SA3',   'LOGG3', 'VALE3', 'PETR3', 'BBSE3', 'PETR4',  
+ATIVOS = ['BOVA11', 'BBDC4',  'GGBR4',   'USIM5',   'GOAU4',   'CSNA3', 'CSAN3', 'BRKM5'] # 'ITUB4',   'ITSA4',   'BRFS3',   'B3SA3',   'LOGG3', 'VALE3', 'PETR3', 'BBSE3', 'PETR4',  'ABEV3'
+
+FERIADOS_PELA_MANHA_B3 = [
+    20180214, 
+    20190306, 
+    20200226, 
+    20210217, 
+    20220303, 
+    20230222,
+]
 
 FERIADOS_B3 = [
     '2018-01-01',  '2018-01-25',  '2018-02-12',  '2018-02-13',
@@ -48,7 +59,7 @@ DADOS = {
     acoes: {
         tempo: {
             'DADOS_INTERESSE': [0, 0, 0, 0], #Candles, Buracos, Max_Buracos, Seq_Atual_Buracos
-            'CABECARIO': ['Data', 'Hora', 'O', 'H', 'L', 'C', 'TEM_BURACO?'],
+            'CABECARIO': ['Data', 'Hora', 'O', 'H', 'L', 'C'],
             'COTACOES': [],
             'TEMPO_ULTIMO_CANDLE': HORA_ABERTURA
         }
@@ -102,49 +113,83 @@ def close_market(date):
         return 1655
 
 
-def horario_abertura(hh) -> int():
+def horario_abertura(hh, data) -> int():
     """Retorna a hora de abertura em HHMM."""
     if str(hh)[:2] == 10:
         return 1030
-    return 1330
+    if data in FERIADOS_PELA_MANHA_B3:
+        return 1330
+    return 1030
 
 
 def sematiza_diario():
     """."""
     for tempo in TEMPOS_DIARIOS:
-        nome_arquivo = f'{tempo}.csv'
+        print(tempo)
+        nome_pasta = tempo
+        tempo_grafico_interesse = tempo
 
-        os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
-        with open(nome_arquivo, newline='') as csvfile:
-            arquivo = csv.reader(csvfile, delimiter=';')
-            dia_atual = None
-
-            for linha in arquivo:
+        for ticker in ATIVOS:
+            nome_arquivo = os.path.join(DIRETORIO_TEMPOS_GRAFICOS, nome_pasta, f'{ticker}_{tempo_grafico_interesse}.csv')
             
-                ticker = linha[0]
+            df_diario_ticker = pd.read_csv(nome_arquivo, sep=';')
+            primeiro_dia_interesse = str(df_diario_ticker['<date>'].iloc[0])
+            
+            b3_calendar = get_calendar('B3')
+            
+            # Definir o intervalo de datas desejado
+            start_date = datetime.strptime(primeiro_dia_interesse, "%Y%m%d").strftime("%Y-%m-%d")
+            end_date = '2023-05-30'
+            # Obter o calendário de negociações
+            schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
+            # Exibir o calendário de negociações
+            dias_uteis = list(schedule.index.astype(str)) 
+            for dia in dias_uteis:
+                dia_int = int(dia.replace('-', ''))
+                df_diario_unique = df_diario_ticker[df_diario_ticker['<date>'] == dia_int]            
+
                 
-                if not ticker in ATIVOS:
+                if dia in FERIADOS_B3:
                     continue
 
-                data = int(linha[1])
-            
-                if not dia_atual:
-                    dia_atual = data
+                if df_diario_unique.shape[0] == 0:
+                    if len(DADOS[ticker][tempo]['COTACOES']) == 0:
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1
+                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = '1200'
+                    else:
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1         
 
-                if dia_atual != data:
-                    dia_atual = data
+                        ultima_data_registrada = dia_int
+                        ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
+                        ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
 
-                
+                        DADOS[ticker][tempo]['COTACOES'].append(
+                            [
+                                ultima_data_registrada, 
+                                ultimo_time_registrado, 
+                                ultimo_fechamento_registrado, 
+                                ultimo_fechamento_registrado, 
+                                ultimo_fechamento_registrado, 
+                                ultimo_fechamento_registrado,
+                            ]
+                        )
+                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = '1200'
+                    
+                    continue
 
-                abertura = float(linha[7])
-                fechamento = float(linha[4])
-                maxima = float(linha[6])
-                minima = float(linha[5])
+                abertura = df_diario_unique['<open>'].iloc[0]
+                fechamento = df_diario_unique['<close>'].iloc[0]
+                maxima = df_diario_unique['<high>'].iloc[0]
+                minima = df_diario_unique['<low>'].iloc[0]
 
                 DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
                 DADOS[ticker][tempo]['COTACOES'].append(
                     [
-                        data, 
+                        dia_int, 
                         1200, 
                         abertura, 
                         maxima, 
@@ -153,119 +198,8 @@ def sematiza_diario():
                     ]
                         
                 )
-            
-            
-            for ticker in ATIVOS:
-                print(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])
-                
-                os.chdir(PATH_SEMATIZA)
-                with open(os.path.join(PATH_SEMATIZA, f'{ticker}_1440.csv'), 'w', newline='') as csvfile:
-                    spanrows = csv.writer(csvfile, delimiter=',')
-                    spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
-                    spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
-                    spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
-                    spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
-                    csvfile.close()
-                print('FIM')
-                with open(os.path.join(PATH_SEMATIZA, f'{ticker}_1440.csv'), 'a', newline='') as csvfile:
-                    spanrows = csv.writer(csvfile, delimiter='\t')
-                    for dados in DADOS[ticker][tempo]['COTACOES']:
-                        spanrows.writerow(dados)
 
-                print('FIM')
-
-
-def intraday():
-    """."""
-    HORA_ABERTURA = 1030
-    for tempo in TEMPOS_INTRADAY:
-        if len(str(tempo)) == 1:
-            nome_arquivo = f'0{tempo}_MINUTO.csv'
-        else:
-            nome_arquivo = f'{tempo}_MINUTO.csv'
-
-        os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
-        with open(nome_arquivo, newline='') as csvfile:
-            arquivo = csv.reader(csvfile, delimiter=';')
-            dia_atual = None
-
-            for linha in arquivo:
-            
-                ticker = linha[0]
-                if not ticker in ATIVOS:
-                    continue
-
-                data = int(linha[1])
-                time_atual = int(linha[2][:-2]) 
-                
-                if time_atual < 1030 or time_atual > (close_market(data) - 25):
-                    DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
-                    continue
-
-                if not dia_atual:
-                    dia_atual = data
-                    HORA_ABERTURA = horario_abertura(time_atual)
-                    DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
-
-                if dia_atual != data:
-                    dia_atual = data
-                    HORA_ABERTURA = horario_abertura(time_atual)
-                    DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
-
-                time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']                   
-                
-                while time_atual > time_ideal:
-                    if time_atual > time_ideal and len(DADOS[ticker][tempo]['COTACOES']) == 0:
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1
-                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
-                    elif time_atual > time_ideal:
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
-                        DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1         
-
-                        ultima_data_registrada = DADOS[ticker][tempo]['COTACOES'][-1][0]
-                        ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
-                        ultima_abertura_registrada = DADOS[ticker][tempo]['COTACOES'][-1][2]
-                        ultima_maxima_registra = DADOS[ticker][tempo]['COTACOES'][-1][3]
-                        ultima_minima_registrada = DADOS[ticker][tempo]['COTACOES'][-1][4]
-                        ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
-                        print(dia_atual)
-                        DADOS[ticker][tempo]['COTACOES'].append(
-                            [
-                                ultima_data_registrada, 
-                                ultimo_time_registrado, 
-                                ultima_abertura_registrada, 
-                                ultima_maxima_registra, 
-                                ultima_minima_registrada, 
-                                ultimo_fechamento_registrado,
-                                1
-                            ]
-                        )
-                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
-                    
-                    time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
-            
-                abertura = float(linha[7])
-                fechamento = float(linha[4])
-                maxima = float(linha[6])
-                minima = float(linha[5])
-
-                DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
-                DADOS[ticker][tempo]['COTACOES'].append(
-                    [
-                        data, 
-                        time_atual, 
-                        abertura, 
-                        maxima, 
-                        minima, 
-                        fechamento,
-                        0
-                    ]
-                        
-                )
-                DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
+                DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = '1200'
 
                 maior_sequencia_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][2]
                 sequencia_atual_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
@@ -273,24 +207,144 @@ def intraday():
                 if maior_sequencia_buraco < sequencia_atual_buraco:
                     DADOS[ticker][tempo]['DADOS_INTERESSE'][2] = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
 
-                DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0            
-            
-            for ticker in ATIVOS: 
-                with open(os.path.join(PATH_SEMATIZA, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
+                DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0       
+
+            for ticker in ATIVOS:
+                if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
+                    os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
+
+                with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
                     spanrows = csv.writer(csvfile, delimiter=',')
                     spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
                     spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
                     spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
-                    spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
                     csvfile.close()
-                with open(os.path.join(PATH_SEMATIZA, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
+                with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
                     spanrows = csv.writer(csvfile, delimiter='\t')
+                    spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
                     for dados in DADOS[ticker][tempo]['COTACOES']:
                         spanrows.writerow(dados)
 
-                print('FIM')
+
+def intraday():
+    """."""
+    HORA_ABERTURA = 1030
+    for tempo in TEMPOS_INTRADAY:
+        print(tempo)
+        if len(str(tempo)) == 1:
+            nome_pasta = f'0{tempo}_MINUTO'
+            tempo_grafico_interesse = f'0{tempo}_MINUTO'
+        else:
+            nome_pasta = f'{tempo}_MINUTO'
+            tempo_grafico_interesse = f'{tempo}_MINUTO'
+
+
+        for ativo in ATIVOS:
+            nome_arquivo = os.path.join(DIRETORIO_TEMPOS_GRAFICOS, nome_pasta, f'{ativo}_{tempo_grafico_interesse}.csv')
+            with open(nome_arquivo, newline='') as csvfile:
+                arquivo = csv.reader(csvfile, delimiter=';')
+                dia_atual = None
+
+                for linha in arquivo:
+                
+                    ticker = linha[0]
+                    if not ticker in ATIVOS:
+                        continue
+
+                    data = int(linha[1])
+                    time_atual = int(linha[2][:-2])                    
+                    if time_atual < 1030 or time_atual > (close_market(data) - 25):
+                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
+                        continue
+
+                    if not dia_atual:
+                        dia_atual = data
+                        HORA_ABERTURA = horario_abertura(time_atual, data)
+                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
+
+                    if dia_atual != data:
+                        dia_atual = data
+                        HORA_ABERTURA = horario_abertura(time_atual, data)
+                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
+
+                    time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']                   
+                    
+                    while time_atual > time_ideal:
+                        if time_atual > time_ideal and len(DADOS[ticker][tempo]['COTACOES']) == 0:
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1
+                            DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
+                        elif time_atual > time_ideal:
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
+                            DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1         
+
+                            ultima_data_registrada = data
+                            ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
+                            ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
+
+                            DADOS[ticker][tempo]['COTACOES'].append(
+                                [
+                                    ultima_data_registrada, 
+                                    ultimo_time_registrado, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado, 
+                                    ultimo_fechamento_registrado,
+                                ]
+                            )
+                            DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
+                        
+                        time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
+                
+                    abertura = float(linha[7])
+                    fechamento = float(linha[4])
+                    maxima = float(linha[6])
+                    minima = float(linha[5])
+
+                    DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
+                    DADOS[ticker][tempo]['COTACOES'].append(
+                        [
+                            data, 
+                            time_atual, 
+                            abertura, 
+                            maxima, 
+                            minima, 
+                            fechamento,
+                        ]
+                            
+                    )
+                    DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
+
+                    maior_sequencia_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][2]
+                    sequencia_atual_buraco = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
+
+                    if maior_sequencia_buraco < sequencia_atual_buraco:
+                        DADOS[ticker][tempo]['DADOS_INTERESSE'][2] = DADOS[ticker][tempo]['DADOS_INTERESSE'][3]
+
+                    DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0            
+                
+                for ticker in ATIVOS:
+                    if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
+                        os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
+
+                    with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
+                        spanrows = csv.writer(csvfile, delimiter=',')
+                        spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
+                        spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
+                        spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
+                        csvfile.close()
+                    with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
+                        spanrows = csv.writer(csvfile, delimiter='\t')
+                        spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
+                        for dados in DADOS[ticker][tempo]['COTACOES']:
+                            spanrows.writerow(dados)
+
+                    print('FIM')
 
 
 if __name__ == '__main__':
     #sematiza_diario()
-    intraday()
+    sematiza_diario()
+    # intraday()
