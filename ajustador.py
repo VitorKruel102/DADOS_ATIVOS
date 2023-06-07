@@ -3,7 +3,7 @@ import pandas as pd
 from pprint import pprint
 
 
-DIRETORIO_DIARIO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'
+DIRETORIO_DIARIO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'  # Dados com Ajuste e com Split
 DIRETORIO_SEM_AJUSTE_MINUTO = r'D:\DADOS_FINANCEIROS\Database_Minuto'
 DIRETORIO_AJUSTADO = r'C:\Users\diaxt\Desktop\SEMATIZA\MINUTO_AJUSTADO'
 
@@ -46,6 +46,7 @@ ERROS = {
     'Data': []
 }
 
+
 def ajustador():
     """."""
     for ativo in ATIVOS_INTERESSE:
@@ -55,13 +56,12 @@ def ajustador():
 
         df_diario = pd.read_csv(arquivo_diario, sep=';')
         df_diario['Data'] = df_diario['Data'].astype(int)
-
         df_minuto = pd.read_csv(arquivo_minuto, sep=';')
 
         for data in df_diario['Data']:
             df_diario_filtrado = df_diario[df_diario['Data'] == data]
             df_minuto_filtrado = df_minuto[df_minuto['<date>'] == data]
-            
+
             try: 
                 fechamento_diario = df_diario_filtrado['Fechamento'].iloc[0]
                 fechamento_minuto = df_minuto_filtrado['<close>'].iloc[-1]
@@ -94,5 +94,6 @@ def ajustador():
         
     pprint(ERROS)
 
-    
-ajustador()
+
+if __name__ == '__main__':
+    ajustador()
