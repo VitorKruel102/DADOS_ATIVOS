@@ -63,8 +63,8 @@ DADOS = {
     for acoes in ATIVOS
 }
 
-DIRETORIO_TEMPOS_GRAFICOS = r'D:\DADOS_FINANCEIROS\Database_TemposGraficos'
-PATH_SEMATIZA = r'C:\Users\diaxt\Desktop\SEMATIZA\DADOS_SEMATIZA'
+DIRETORIO_TEMPOS_GRAFICOS = r'D:\DADOS_FINANCEIROS\Database_Sematiza_TemposGraficos'
+PATH_SEMATIZA = r'D:\DADOS_FINANCEIROS\Database_Sematiza'
 
 
 def close_update(new_close):
@@ -201,24 +201,24 @@ def sematiza_diario():
                     DADOS[ticker][tempo]['DADOS_INTERESSE'][3] = 0 
 
                         
-            for ticker in ATIVOS:
-                if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
-                    os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
+        for ticker in ATIVOS:
+            if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
+                os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
 
-                with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
-                    spanrows = csv.writer(csvfile, delimiter=',')
-                    spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
-                    spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
-                    spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
-                    csvfile.close()
-                with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'a', newline='') as csvfile:
-                    spanrows = csv.writer(csvfile, delimiter='\t')
-                    spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
-                    for dados in DADOS[ticker][tempo]['COTACOES']:
-                        spanrows.writerow(dados)
+            with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_1440.csv'), 'w', newline='') as csvfile:
+                spanrows = csv.writer(csvfile, delimiter=',')
+                spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
+                spanrows.writerow(['#Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][1])])
+                spanrows.writerow(['#Max.Buracos:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][2])])
+                csvfile.close()
+            with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_1440.csv'), 'a', newline='') as csvfile:
+                spanrows = csv.writer(csvfile, delimiter='\t')
+                spanrows.writerow(DADOS[ticker][tempo]['CABECARIO'])
+                for dados in DADOS[ticker][tempo]['COTACOES']:
+                    spanrows.writerow(dados)
 
 
-                print('FIM')
+            print('FIM')
 
 
 def intraday():
@@ -235,7 +235,7 @@ def intraday():
             tempo_grafico_interesse = f'{tempo}_MINUTO'
 
         for ticker in ATIVOS:
-            print(nome_arquivo)
+            print(nome_pasta)
             os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
             nome_arquivo = os.path.join(DIRETORIO_TEMPOS_GRAFICOS, nome_pasta, f'{ticker}_{tempo_grafico_interesse}.csv')
             df_minuto = pd.read_csv(nome_arquivo, sep=';')
@@ -385,7 +385,14 @@ def intraday():
             print('FIM')
 
 
+def remove_folders(directory):
+    """Delete all folders"""
+    for root, _, files in os.walk(directory):
+        for file in files:
+            os.remove(os.path.join(root, file))
+
 
 if __name__ == '__main__':
+    remove_folders(PATH_SEMATIZA)
     sematiza_diario()
     intraday()

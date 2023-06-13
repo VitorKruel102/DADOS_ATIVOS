@@ -5,7 +5,7 @@ from pprint import pprint
 
 DIRETORIO_DIARIO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'  # Dados com Ajuste e com Split
 DIRETORIO_SEM_AJUSTE_MINUTO = r'D:\DADOS_FINANCEIROS\Database_Minuto'
-DIRETORIO_AJUSTADO = r'C:\Users\diaxt\Desktop\SEMATIZA\MINUTO_AJUSTADO'
+DIRETORIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_MinutoAjustado'
 
 ATIVOS_INTERESSE = [
     'PETR4',  'ELET6',  'BBDC4',  'CMIG4',  'ELET3',  'EMBR3',  'PETR3',  'USIM5',
@@ -59,6 +59,9 @@ def ajustador():
         df_minuto = pd.read_csv(arquivo_minuto, sep=';')
 
         for data in df_diario['Data']:
+            if data < 20180215:
+                continue
+            
             df_diario_filtrado = df_diario[df_diario['Data'] == data]
             df_minuto_filtrado = df_minuto[df_minuto['<date>'] == data]
 
@@ -92,8 +95,17 @@ def ajustador():
         for colunas in DADOS.keys():
             DADOS[colunas].clear()
         
-    pprint(ERROS)
+    pprint(ERROS['Ticker'])
+    pprint(ERROS['Data'])
+
+
+def remove_folders(directory):
+    """Delete all folders"""
+    for root, _, files in os.walk(directory):
+        for file in files:
+            os.remove(os.path.join(root, file))
 
 
 if __name__ == '__main__':
+    remove_folders(DIRETORIO_AJUSTADO)
     ajustador()

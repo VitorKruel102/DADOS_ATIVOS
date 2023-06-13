@@ -1,10 +1,15 @@
 import os 
 import pandas as pd
 from pandas_market_calendars import get_calendar
+from datetime import datetime
+
+
 
 DIRETORIO_INTRADAY = r'D:\DADOS_FINANCEIROS\Database_PrincipaisAcoes'
-DIRETORIO_DIARIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_NA'
+DIRETORIO_DIARIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'
 DIRETORIO_DIARIO_SEM_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario'
+PATH_ALERTADOR = r'D:\DADOS_FINANCEIROS\Database_Alertador'
+
 
 FERIADOS_B3 = [
     '2018-01-01',  '2018-01-25',  '2018-02-12',  '2018-02-13',
@@ -64,140 +69,140 @@ ERROS = {
     'Data': [],
 }
 
+def main():
+    global REGISTROS, ERROS, DADOS_ESTATISTICOS
+    for path, dir, files in os.walk(DIRETORIO_INTRADAY):
+        for file in files:
+            ativo = file.split('_')[0]
+            print(ativo)
 
-for path, dir, files in os.walk(DIRETORIO_INTRADAY):
-    for file in files:
-        ativo = file.split('_')[0]
-        print(ativo)
+            df_intraday = pd.read_csv(os.path.join(DIRETORIO_INTRADAY, file), sep=';')
+            periodo_dados = len(df_intraday['<date>'].iloc[1:].unique())    
 
-        df_intraday = pd.read_csv(os.path.join(DIRETORIO_INTRADAY, file), sep=';')
-        periodo_dados = len(df_intraday['<date>'].iloc[1:].unique())
-        
-        primeiro_dia_interesse = df_intraday['<date>'].iloc[1]
-        
-        b3_calendar = get_calendar('B3')
-        # Definir o intervalo de datas desejado
-        start_date = primeiro_dia_interesse
-        end_date = '2023-05-30'
-        # Obter o calendário de negociações
-        schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
-        # Exibir o calendário de negociações
-        dias_uteis = list(schedule.index.astype(str)) 
-        
-        for dia in dias_uteis:
-            dia_int = int(dia.replace('-', ''))
-            df_intraday_unique = df_intraday[df_intraday['<date>'] == dia_int]
-
-            if dia in FERIADOS_B3:
-                continue
-
-            if dia_int < 20211013:                
-                df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_AJUSTADO, f'{ativo}_DIARIO_NA.csv'), sep=';')
-                is_adjusted = True
-            elif dia_int == 20211013:
-                df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
-                is_adjusted = False
-                
-                df = pd.DataFrame(REGISTROS)
-                moda_diferenca_abertura = df['Diferenca_Abertura'].mode()[0]
-                print(moda_diferenca_abertura)
-                print(df)
-                df = df[df['Diferenca_Abertura'] != moda_diferenca_abertura]
-                df['Moda'] = moda_diferenca_abertura
-                REGISTROS = df.to_dict('list')
-                if len(REGISTROS['Data']) == 0:
-                    REGISTROS = {
-                        item: []
-                        for item in df.to_dict()
-                    }
-            else:
-                df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
-                is_adjusted = False
-
-            abertura_diario = df_diario['Abertura']
-            fechamento_diario = df_diario['Fechamento']
-            if df_intraday_unique.shape[0] == 0:
-                REGISTROS['Data'].append(dia_int)
-                REGISTROS['Ticker'].append(ativo)
-                REGISTROS['Abertura_Diario'].append(abertura_diario)
-                REGISTROS['Abertura_Minuto'].append(0)
-                REGISTROS['Diferenca_Abertura'].append(0)
-                REGISTROS['Fechamento_Diario'].append(fechamento_diario)
-                REGISTROS['Fechamento_Minuto'].append(0)
-                REGISTROS['Diferenca_Fechamento'].append(0)
-                
-                if is_adjusted:
-                    REGISTROS['Problema'].append('Ajustado')
-                    REGISTROS['Moda'].append(0)
-                else:
-                    REGISTROS['Problema'].append('Nao_Ajustado')
-                    REGISTROS['Moda'].append(1)                
-                
-            df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
-            df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
-            df_diario['Data'] = df_diario['Data'].astype(int)
-
-            df_diario_filtrado = df_diario[df_diario['Data'] == dia_int] 
-
-            try:
-                abertura_diario = round(df_diario_filtrado['Abertura'].iloc()[0], 2)
-                fechamento_diario = round(df_diario_filtrado['Fechamento'].iloc()[0], 2)
-                abertura_intraday = round(df_intraday_unique['<open>'].iloc()[0], 2)
-                fechamento_intraday = round(df_intraday_unique['<close>'].iloc()[-1], 2)
-            except IndexError as err:
-                ERROS['Ticker'].append(ativo)
-                ERROS['Motivo'].append(err)
-                ERROS['Data'].append(dia_int)
-                
+            start_date = datetime.strptime(str(df_intraday['<date>'].iloc[0]), "%Y%m%d").strftime("%Y-%m-%d")
+            end_date = datetime.strptime(str(df_intraday['<date>'].iloc[-1]), "%Y%m%d").strftime("%Y-%m-%d")
+            dias_uteis = dias_uteis_b3(start_date, end_date, tipo_calendario='B3')
             
-            if (abertura_intraday == abertura_diario) and (fechamento_intraday == fechamento_diario):
-                continue
-            else:
-                REGISTROS['Data'].append(dia_int)
-                REGISTROS['Ticker'].append(ativo)
-                REGISTROS['Abertura_Diario'].append(abertura_diario)
-                REGISTROS['Abertura_Minuto'].append(abertura_intraday)
-                REGISTROS['Diferenca_Abertura'].append(round(abertura_diario / abertura_intraday, 3))
-                REGISTROS['Fechamento_Diario'].append(fechamento_diario)
-                REGISTROS['Fechamento_Minuto'].append(fechamento_intraday)
-                REGISTROS['Diferenca_Fechamento'].append(round(fechamento_diario / fechamento_intraday, 3))
-                
-                if is_adjusted:
-                    REGISTROS['Problema'].append('Ajustado')
-                    REGISTROS['Moda'].append(0)
+            for dia in dias_uteis:
+                dia_int = int(dia.replace('-', ''))
+                df_intraday_unique = df_intraday[df_intraday['<date>'] == dia_int]
+
+                if dia in FERIADOS_B3:
+                    continue
+
+                if dia_int < 20211013:                
+                    df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_AJUSTADO, f'{ativo}_DIARIO_NAS.csv'), sep=';')
+                    is_adjusted = True
+                    df_diario['Data'] = df_diario['Data'].astype(int)
+
+                elif dia_int == 20211013:
+                    df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
+                    is_adjusted = False
+                    
+                    df = pd.DataFrame(REGISTROS)
+                    moda_diferenca_abertura = df['Diferenca_Abertura'].mode()[0]
+                    print(moda_diferenca_abertura)
+                    print(df)
+                    df = df[df['Diferenca_Abertura'] != moda_diferenca_abertura]
+                    df['Moda'] = moda_diferenca_abertura
+                    REGISTROS = df.to_dict('list')
+                    if len(REGISTROS['Data']) == 0:
+                        REGISTROS = {
+                            item: []
+                            for item in df.to_dict()
+                        }
+                    df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
+                    df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
+                    df_diario['Data'] = df_diario['Data'].astype(int)
                 else:
-                    REGISTROS['Problema'].append('Nao_Ajustado')
-                    REGISTROS['Moda'].append(1)
+                    df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_SEM_AJUSTE, f'{ativo}_DIARIO.csv'), sep=';') 
+                    is_adjusted = False
+                    
+                    df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
+                    df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
+                    df_diario['Data'] = df_diario['Data'].astype(int)
+                    ...
+                abertura_diario = df_diario['Abertura']
+                fechamento_diario = df_diario['Fechamento']
+                if df_intraday_unique.shape[0] == 0:
+                    REGISTROS['Data'].append(dia_int)
+                    REGISTROS['Ticker'].append(ativo)
+                    REGISTROS['Abertura_Diario'].append(abertura_diario)
+                    REGISTROS['Abertura_Minuto'].append(0)
+                    REGISTROS['Diferenca_Abertura'].append(0)
+                    REGISTROS['Fechamento_Diario'].append(fechamento_diario)
+                    REGISTROS['Fechamento_Minuto'].append(0)
+                    REGISTROS['Diferenca_Fechamento'].append(0)
+                    
+                    if is_adjusted:
+                        REGISTROS['Problema'].append('Ajustado')
+                        REGISTROS['Moda'].append(0)
+                    else:
+                        REGISTROS['Problema'].append('Nao_Ajustado')
+                        REGISTROS['Moda'].append(1)                
 
-        df = pd.DataFrame(REGISTROS)
-        periodo_com_problemas = df.shape[0]
-        if periodo_com_problemas == 0: 
-            continue
-        
-        df_intraday['<date>'] = df_intraday['<date>'].astype(str)
-        df_intraday['<date>'] = pd.to_datetime(df_intraday['<date>'])
+                df_diario_filtrado = df_diario[df_diario['Data'] == dia_int] 
+                
+                try:
+                    abertura_diario = round(df_diario_filtrado['Abertura'].iloc()[0], 2)
+                    fechamento_diario = round(df_diario_filtrado['Fechamento'].iloc()[0], 2)
+                    abertura_intraday = round(df_intraday_unique['<open>'].iloc()[0], 2)
+                    fechamento_intraday = round(df_intraday_unique['<close>'].iloc()[-1], 2)
+                except IndexError as err:
+                    ERROS['Ticker'].append(ativo)
+                    ERROS['Motivo'].append(err)
+                    ERROS['Data'].append(dia_int)
+                    continue
+                    
+                
+                
+                if (abertura_intraday == abertura_diario) and (fechamento_intraday == fechamento_diario):
+                    continue
+                else:
+                    REGISTROS['Data'].append(dia_int)
+                    REGISTROS['Ticker'].append(ativo)
+                    REGISTROS['Abertura_Diario'].append(abertura_diario)
+                    REGISTROS['Abertura_Minuto'].append(abertura_intraday)
+                    REGISTROS['Diferenca_Abertura'].append(round(abertura_diario / abertura_intraday, 3))
+                    REGISTROS['Fechamento_Diario'].append(fechamento_diario)
+                    REGISTROS['Fechamento_Minuto'].append(fechamento_intraday)
+                    REGISTROS['Diferenca_Fechamento'].append(round(fechamento_diario / fechamento_intraday, 3))
+                    
+                    if is_adjusted:
+                        REGISTROS['Problema'].append('Ajustado')
+                        REGISTROS['Moda'].append(0)
+                    else:
+                        REGISTROS['Problema'].append('Nao_Ajustado')
+                        REGISTROS['Moda'].append(1)
 
-        DADOS_ESTATISTICOS['Ticker'].append(ativo)
-        DADOS_ESTATISTICOS['Periodo_Inicial'].append(df_intraday['<date>'].min())
-        DADOS_ESTATISTICOS['Periodo_Final'].append(df_intraday['<date>'].max())
-        DADOS_ESTATISTICOS['Total_dias'].append(df_intraday['<date>'].max() - df_intraday['<date>'].min())
-        DADOS_ESTATISTICOS['Dias_com_Erros'].append(periodo_com_problemas)
-        DADOS_ESTATISTICOS['Percentual_Integridade'].append(round(((periodo_dados - periodo_com_problemas) / periodo_dados) * 100, 2))
+            df = pd.DataFrame(REGISTROS)
+            periodo_com_problemas = df.shape[0]
+            if periodo_com_problemas == 0: 
+                continue
+            
+            df_intraday['<date>'] = df_intraday['<date>'].astype(str)
+            df_intraday['<date>'] = pd.to_datetime(df_intraday['<date>'])
 
-        PATH = r'C:\Users\diaxt\Desktop\SEMATIZA\DADOS_ALERTADO'
-        df.to_csv(os.path.join(PATH, f'{ativo}_estudo.csv'), sep=';', index=False)
+            DADOS_ESTATISTICOS['Ticker'].append(ativo)
+            DADOS_ESTATISTICOS['Periodo_Inicial'].append(df_intraday['<date>'].min())
+            DADOS_ESTATISTICOS['Periodo_Final'].append(df_intraday['<date>'].max())
+            DADOS_ESTATISTICOS['Total_dias'].append(df_intraday['<date>'].max() - df_intraday['<date>'].min())
+            DADOS_ESTATISTICOS['Dias_com_Erros'].append(periodo_com_problemas)
+            DADOS_ESTATISTICOS['Percentual_Integridade'].append(round(((periodo_dados - periodo_com_problemas) / periodo_dados) * 100, 2))
 
-        for colunas in REGISTROS.keys():
-            REGISTROS[colunas].clear()
+            
+            df.to_csv(os.path.join(PATH_ALERTADOR, f'{ativo}_estudo.csv'), sep=';', index=False)
 
-df = pd.DataFrame(DADOS_ESTATISTICOS)                
-PATH = r'C:\Users\diaxt\Desktop\SEMATIZA\DADOS_ALERTADO'
-df.to_csv(os.path.join(PATH, f'Estatistica_Tickes.csv'), sep=';', index=False)
+            for colunas in REGISTROS.keys():
+                REGISTROS[colunas].clear()
 
-for colunas in DADOS_ESTATISTICOS.keys():
-    DADOS_ESTATISTICOS[colunas].clear()
+    df = pd.DataFrame(DADOS_ESTATISTICOS)                
+    df.to_csv(os.path.join(PATH_ALERTADOR, f'Estatistica_Tickes.csv'), sep=';', index=False)
 
-print(ERROS)
+    for colunas in DADOS_ESTATISTICOS.keys():
+        DADOS_ESTATISTICOS[colunas].clear()
+
+    print(ERROS)
     
 def comparacao_volume_abertura():
     """."""
@@ -228,7 +233,17 @@ def comparacao_volume_abertura():
 
     df_comparacao = pd.DataFrame(DADOS)
     print(df_comparacao)
-    df_comparacao.to_csv(os.path.join(r'C:\Users\diaxt\Desktop\SEMATIZA',  'comparacao.csv'), sep=';', index=False)
+    df_comparacao.to_csv(os.path.join(PATH_ALERTADOR,  'comparacao.csv'), sep=';', index=False)
 
 
+def dias_uteis_b3(start_date, end_date, tipo_calendario='B3') -> list():
+    """Retorna os dias úteis do mercado brasileiro."""
+    b3_calendar = get_calendar(tipo_calendario)
+    # Obter o calendário de negociações
+    schedule = b3_calendar.schedule(start_date=start_date, end_date=end_date)
+    # Exibir o calendário de negociações
+    return list(schedule.index.astype(str)) 
 
+
+if __name__ == '__main__':
+    main()
