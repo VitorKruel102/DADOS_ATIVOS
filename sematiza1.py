@@ -15,7 +15,98 @@ from pandas_market_calendars import get_calendar
     'EQTL3',   'BRAP4',   'HAPV3',   'ABEV3',   'MGLU3',   'PRIO3',   'CRFB3',   'NTCO3',   'CPFE3',   'CMIG3',   'SAPR11',  'MTSA3',   'LIPR3',
     'VSTE3',   'JBSS3',   'GFSA3',   'KLBN4',   'USIM5',   'CSAN3',   'BEES3',   'AZUL4',   'TCSA3',   'MULT3',   'DASA3',   'LREN3',
 ]"""
-ATIVOS = ['BOVA11', 'BBDC4',  'GGBR4',   'USIM5',   'GOAU4',   'CSNA3', 'CSAN3', 'BRKM5']# 'ABEV3', 'ITUB4',   'ITSA4',   'BRFS3',   'B3SA3',   'LOGG3', 'VALE3', 'PETR3', 'BBSE3', 'PETR4',  
+ATIVOS = [
+'MRVE3',
+'GOAU4',
+'COGN3',
+'QUAL3',
+'SUZB3',
+'SANB11',
+'B3SA3',
+'MRFG3',
+'KLBN11',
+'UGPA3',
+'CSNA3',
+'PETR3',
+'TIMS3',
+'EZTC3',
+'ELET6',
+'HYPE3',
+'AMER3',
+'CCRO3',
+'BRDT3',
+'SBSP3',
+'EQTL3',
+'BPAN4',
+'ALSO3',
+'ASAI3',
+'LWSA3',
+'CMIN3',
+'ABEV3',
+'TAEE11',
+'VIVT3',
+'ITSA4',
+'BRKM5',
+'EGIE3',
+'ENGI11',
+'PCAR3',
+'USIM5',
+'ECOR3',
+'ELET3',
+'IRBR3',
+'DXCO3',
+'MGLU3',
+'LREN3',
+'JHSF3',
+'BBDC3',
+'VALE3',
+'FLRY3',
+'IGTI11',
+'BEEF3',
+'PETZ3',
+'BRAP4',
+'CPLE6',
+'VBBR3',
+'NTCO3',
+'CPFE3',
+'JBSS3',
+'CIEL3',
+'BRFS3',
+'RADL3',
+'AZUL4',
+'RENT3',
+'SOMA3',
+'VIIA3',
+'RAIL3',
+'PRIO3',
+'ENBR3',
+'WEGE3',
+'BPAC11',
+'PETR4',
+'ITUB4',
+'MULT3',
+'BBDC4',
+'ALPA4',
+'POSI3',
+'CVCB3',
+'CRFB3',
+'CMIG4',
+'BBSE3',
+'CYRE3',
+'GOLL4',
+'BBAS3',
+'SLCE3',
+'ENEV3',
+'TOTS3',
+'RDOR3',
+'GGBR4',
+'EMBR3',
+'CASH3',
+'HAPV3',
+'CSAN3',
+'RRRP3',
+]
+
 
 FERIADOS_B3 = [
     '2018-01-01',  '2018-01-25',  '2018-02-12',  '2018-02-13',
@@ -263,18 +354,30 @@ def intraday():
                         (df_minuto_filtrado['<time>'] <= (close_market(dia_int) - 25))
                     ]
                 else:
-                    DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
+                    if close_market(dia_int) == 1755 and dia_int < 20121203:
+                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = 1130
+                        HORA_ABERTURA = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
+                    else:
+                        DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
+
+                    if df_minuto_filtrado['<date>'].shape[0] > 0:
+                        if df_minuto_filtrado['<time>'].iloc[0] >= 1300:
+                            DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = 1330
+                            HORA_ABERTURA = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
+
                     time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
                     df_minuto_filtrado = df_minuto_filtrado[
                         (df_minuto_filtrado['<time>'] >= HORA_ABERTURA) & 
                         (df_minuto_filtrado['<time>'] <= (close_market(dia_int) - 25))
                     ]
 
+
                 if df_minuto_filtrado['<date>'].shape[0] == 0:
                     if dia in FERIADOS_B3:
                         continue
                     else:
                         time_atual = (close_market(dia_int) - 25)
+                        
                         while time_atual >= time_ideal:
                             if time_atual >= time_ideal and len(DADOS[ticker][tempo]['COTACOES']) == 0:
                                 DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
@@ -308,7 +411,7 @@ def intraday():
                 for _, row in df_minuto_filtrado.iterrows():
                     time_atual = row['<time>']
                     time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
-
+                    
                     while time_atual > time_ideal:
                         if time_atual > time_ideal and len(DADOS[ticker][tempo]['COTACOES']) == 0:
                             DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
@@ -323,7 +426,7 @@ def intraday():
                             ultima_data_registrada = str(dia_int)
                             ultimo_time_registrado = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
                             ultimo_fechamento_registrado = DADOS[ticker][tempo]['COTACOES'][-1][5]
-                            
+               
                             DADOS[ticker][tempo]['COTACOES'].append(
                                 [
                                     ultima_data_registrada, 
