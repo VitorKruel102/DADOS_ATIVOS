@@ -220,6 +220,7 @@ ATIVOS_INTERESSE = [
 'HAPV3',
 'CSAN3',
 'RRRP3',
+'YDUQ3',
 ]
 
 
