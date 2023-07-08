@@ -1,13 +1,13 @@
 """
 Projeto solicitado pelo Luciano para criação
-de planilhas para os ativos de interesse confome
+de planilhas para os ativos de interesse conforme
 os tempos gráficos solicidados, sendo eles:
 
     -> 1, 5, 10, 15, 20, 30, 60 minutos e Diario;
 
 Os ativos precisam estar ajustados, e o periodo de 
 abertura para esses candles de interesse devem ser 30min
-após a abertura normal do pregrão e 30min antes do fechamento.
+após a abertura normal do pregrão e 25min antes do fechamento.
 
 Os dados são utilizados no formato do TradeIntraday.
 
