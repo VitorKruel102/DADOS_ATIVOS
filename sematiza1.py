@@ -2,7 +2,7 @@ import csv
 import os
 import pandas as pd
 from pandas_market_calendars import get_calendar
-
+from time import sleep
 
 """ATIVOS = [
     'BBSE3',   'ENGI11',  'EGIE3',   'ITUB4',   'ITSA4',   'BRFS3',   'PRIO3',   'LOGG3',   'BEEF3',   'GGBR4',   'OIBR4',   'TELB3',   'CCRO3',
@@ -137,8 +137,8 @@ DIAS_DE_ABERTURAS_A_TARDE = [
     '2021-02-17', '2022-03-03', '2023-02-22',
 ]
 
-TEMPOS_INTRADAY = [1,  5, 10, 15, 20, 30] #,1,  5, 10, 15, 20, 30
-TEMPOS_DIARIOS = ['DIARIO'] # SAF = Sem After
+TEMPOS_INTRADAY = [1,  5, 10, 15, 20, 30,60] #,1,  5, 10, 15, 20, 30, 60
+TEMPOS_DIARIOS = ['DIARIO'] # SAF = Sem After 'DIARIO'
 HORA_ABERTURA = 1030 # HHMM
 
 DADOS = {
@@ -163,8 +163,8 @@ def close_update(new_close):
     minuts = int(str(new_close)[2:4])
     if minuts >= 60:
         hours = str(int(str(new_close)[:2]) + 1)
-        minuto = '0'+ str(new_close)[3]
-        new_close = (hours + minuto).zfill(4)
+        minuto = str(int(str(new_close)[2:]) - 60)
+        new_close = f'{hours}0{minuto}' if len(minuto) == 1 else hours + minuto
 
     del minuts
 
@@ -360,11 +360,7 @@ def intraday():
                     else:
                         DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = HORA_ABERTURA
 
-                    if df_minuto_filtrado['<date>'].shape[0] > 0:
-                        if df_minuto_filtrado['<time>'].iloc[0] >= 1300:
-                            DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = 1330
-                            HORA_ABERTURA = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
-
+    
                     time_ideal = DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE']
                     df_minuto_filtrado = df_minuto_filtrado[
                         (df_minuto_filtrado['<time>'] >= HORA_ABERTURA) & 
@@ -384,6 +380,7 @@ def intraday():
                                 DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
                                 DADOS[ticker][tempo]['DADOS_INTERESSE'][3] += 1
                                 DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] = close_update(DADOS[ticker][tempo]['TEMPO_ULTIMO_CANDLE'] + tempo) 
+                                
                             elif time_atual >= time_ideal:
                                 DADOS[ticker][tempo]['DADOS_INTERESSE'][0] += 1
                                 DADOS[ticker][tempo]['DADOS_INTERESSE'][1] += 1
