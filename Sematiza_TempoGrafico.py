@@ -1,5 +1,4 @@
 """
-
 Criado: 07/07/2023 08:50
 
 Autor: Vitor Kruel
