@@ -1,46 +1,45 @@
 """
-Alertador - Realiza uma analise estatística para alertar os problemas nos dados,
-sua avaliação é feita pela comparação do dados intraday de fechamento e abertura com os dados
-do Diário do Profit Pro.
+Alertador - Realiza uma análise estatística para identificar problemas nos dados. 
+Sua avaliação é feita comparando os dados intraday de abertura e fechamento com 
+os dados diários do Profit Pro.
 
-LEMBRETE: Existe dados ajustados e não ajustados no historico
-    DIA < 20211013 (AJUSTADOS)
-    DIA >= 20211013 (NÃO AJUSTADOS)
+É importante lembrar que existem dados ajustados e não ajustados no histórico:
+    - DIA < 20211013 (DADOS AJUSTADOS)
+    - DIA >= 20211013 (DADOS NÃO AJUSTADOS)
 
-Então vamos precisar identificar qual a data para determinar se vamos usar o profit ajustado 
-ou não ajustao para a analise
+Portanto, é necessário identificar a data para determinar se devemos usar o Profit ajustado ou não ajustado na análise.
 
-Será realizado dois testes antes de confirmar os problemas nos dados:
+Serão realizados até três testes antes de confirmar os problemas nos dados:
 
-    - Comparar a Abertura do do dia no Intraday com o Diario;
+    - Comparar a Abertura do dia no Intraday com o Diario;
     - Comparar Fechamentos do dia no Intraday com o Diario;
-    - Os dias que não passaram no teste, será realizado uma moda para ver se mantem constantes
-    (Precisa ter no mínimo 10 dias com problemas para tirar a moda).
+    - Os dias que não passaram no teste, será realizado o calculo da Moda para ver se mantém constantes a variação.
+    (Precisa ter no mínimo 20 dias com problemas para tirar a moda).
 
-Foi realizado uma conversa com o luciano, onde foi acordado que se a variação for diferente, porém,
-se manter estável no periodo, iremos considerar como dados integros. Para fazer isso, todos os dados
-que não foram validados inicialmente pelo fechamento e abertura, foi preciso tirar a moda desses dados
-e todos os dias que forem igual a moda foi considerado Ok e passaram no teste.
+Após uma conversa com Luciano, foi acordado que, se a variação for diferente no período de dados ajustados por dividendos, 
+mas se mantiver estável no período, consideraremos os dados como íntegros. Para isso, todos os dados que não foram 
+inicialmente validados pelo fechamento e abertura precisarão ter sua moda calculada. Todos os dias que forem iguais 
+à moda serão considerados corretos e passarão no teste.
 
-Lembrando que esses problemas de variação da diferença ocorre apenas no periodo com ajustes por dividentos.
+Para executar o código, são necessários os dados do Intraday e do Profit Diário no mesmo período em ambos os arquivos, 
+para garantir a validação correta.
 
-Para o código, precisamos dos dados do Intraday e Profit Diario no mesmo periodo em ambos os arquivos,
-para conseguir fazer a validação correta.
+Será necessário obter os dias úteis da B3 para ver se há dias faltantes na base de dados.
 
-Será criado um arquivo para cada ativo que vão conter os dias e as informações dos problemas, mostrando
-como foi a diferente entre as comparações de fechamento e abertura, assim como a diferenta com a moda no
-segundo teste.
+Será criado um arquivo para cada ativo, contendo os dias e informações sobre os problemas, mostrando as diferenças 
+entre as comparações de fechamento e abertura, bem como a diferença em relação à moda no segundo teste.
 
-No final, vai criar um relatorio geral com todos os ativos com sua repectiva integrida em porcentagem.
+Ao final, será gerado um relatório geral com todos os ativos e suas respectivas integridades em porcentagem.
 
 Criado: 10/07/2023 17:43
 
 Autor: Vitor Kruel.
 """
+import csv
 import os
 import json
 import pandas as pd
-
+pd.options.mode.chained_assignment = None
 
 from pandas_market_calendars import get_calendar
 from datetime import datetime
@@ -57,32 +56,42 @@ PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO = 20211013
 
 class Alertador:
     def __init__(self) -> None:
+        self.inicio_processamento_global = datetime.now()
+        self.salva_log_desempenho(f'INICIALIZAÇÃO: {self.inicio_processamento_global}', reiniciar_arquivo=True)
+        self.salva_log_desempenho(f'{"-" * 80}', )
+
         self.feriados_b3 = self.retornar_feriados_integrais_da_b3()
-        self._estrutura_para_comparacao = self.inicializa_campos_de_analise(None)
+        self._estrutura_de_dados_com_erros = self.inicializa_campos_de_analise(None)
         self._estrutura_estatistica = self.inicializa_campos_dados_estatisticos(None)
 
-        self.enviar_dados()
-
+        self.enviar_dados_intraday()
         df_estatistica = pd.DataFrame(self._estrutura_estatistica)
         self.salva_dados_no_diretorio_alertador(df_estatistica, f'Estatistica_Tickes.csv')
 
-    def enviar_dados(self) -> str:
-        """."""
+        self.salva_log_desempenho(f'FINALIZAÇÃO: {datetime.now()}.')
+        self.salva_log_desempenho(f'TEMPO TOTAL DE EXECUÇÃO: {datetime.now() - self.inicio_processamento_global}.')
+
+    def enviar_dados_intraday(self) -> str:
+        """Enviar dados do Intraday para a função manipular dados para a comparação."""
         for path, _, arquivos in os.walk(DIRETORIO_DADOS_INTRADAY):
             for arquivo in arquivos:
                 path_arquivo = os.path.join(path, arquivo)
-                
-                self.manipular_dados(path_arquivo)
 
-    def manipular_dados(self, path_arquivo):
-        """."""
+                self.gerenciar_comparacoes(path_arquivo)
+
+    def gerenciar_comparacoes(self, path_arquivo):
+        """Sua funcionalida é gerenciar os dados para realizar as 
+        comparações dos dados do Intraday com o do ProfitPro."""
         nome_do_ticker = path_arquivo.split('\\')[-1].split('_')[0]
 
         df_intraday = pd.read_csv(path_arquivo, sep=';')
         dias_uteis_da_b3 = self.retorna_dias_uteis_b3(df_intraday)
         
+        hora_inicial_do_processamento = datetime.now()
+        self.salva_log_desempenho(f'{nome_do_ticker} --> Inicializou Processamento: {hora_inicial_do_processamento}')
+
         for dia in dias_uteis_da_b3:
-            dia_int = int(dia.replace('-', ''))
+            dia_int = int(dia.replace('-', '')) #Formato: AAAAMMDD
 
             if not self.eh_dia_util(dia, self.feriados_b3):
                 continue
@@ -97,19 +106,18 @@ class Alertador:
             if self.finalizou_dados_ajustados(dia_int):
                 self.analisar_dados_com_problemas_no_ajustado()
             
-            df_diario_filtrado = df_diario[df_diario['Data'] == dia_int] 
-            df_intraday_unique = df_intraday[df_intraday['<date>'] == dia_int]
+            df_diario_dia_atual = df_diario[df_diario['Data'] == dia_int] 
+            df_intraday_dia_atual = df_intraday[df_intraday['<date>'] == dia_int]
 
-            if not self.tem_dados_no_dataframe(df_diario_filtrado):
+            if not self.tem_dados_no_dataframe(df_diario_dia_atual):
                 self.log_erro(f'{nome_do_ticker}: Não encontrato nos dados do Profit. (Data: {dia_int})')
                 continue
 
-            _abertura_diario = round(df_diario_filtrado['Abertura'].iloc()[0], 2)
-            _fechamento_diario = round(df_diario_filtrado['Fechamento'].iloc()[0], 2)
+            _abertura_diario = round(df_diario_dia_atual['Abertura'].iloc()[0], 2)
+            _fechamento_diario = round(df_diario_dia_atual['Fechamento'].iloc()[0], 2)
             
-            df_intraday_unique = df_intraday[df_intraday['<date>'] == dia_int]
-            if not self.tem_dados_no_dataframe(df_intraday_unique):
-                self.adiciona_informacoes_na_estrutura_de_comparacoes(
+            if not self.tem_dados_no_dataframe(df_intraday_dia_atual):
+                self.adiciona_informacoes_na_estrutura_de_dados_com_erros(
                     eh_ajustado=eh_ajustado,
                     INFORMACAO_DIA_INT=dia_int,
                     INFORMACAO_TICKER=nome_do_ticker,
@@ -122,8 +130,8 @@ class Alertador:
                 )
                 continue
 
-            _abertura_intraday = round(df_intraday_unique['<open>'].iloc()[0], 2)
-            _fechamento_intraday = round(df_intraday_unique['<close>'].iloc()[-1], 2)
+            _abertura_intraday = round(df_intraday_dia_atual['<open>'].iloc()[0], 2)
+            _fechamento_intraday = round(df_intraday_dia_atual['<close>'].iloc()[-1], 2)
 
             if self.primeira_e_segunda_validacao_for_ok(
                 _abertura_intraday,
@@ -133,7 +141,7 @@ class Alertador:
                 ):
                 continue
 
-            self.adiciona_informacoes_na_estrutura_de_comparacoes(
+            self.adiciona_informacoes_na_estrutura_de_dados_com_erros(
                 eh_ajustado=eh_ajustado,
                 INFORMACAO_DIA_INT=dia_int,
                 INFORMACAO_TICKER=nome_do_ticker,
@@ -145,7 +153,7 @@ class Alertador:
                 INFORMACAO_DIFERENCA_FECHAMENTO=round(_fechamento_diario / _fechamento_intraday, 3),
             )           
 
-        df_dados_com_problemas = pd.DataFrame(self._estrutura_para_comparacao)
+        df_dados_com_problemas = pd.DataFrame(self._estrutura_de_dados_com_erros)
         
         if not self.tem_dados_no_dataframe(df_dados_com_problemas):
             return
@@ -157,15 +165,36 @@ class Alertador:
         )
 
         self.salva_dados_no_diretorio_alertador(df_dados_com_problemas, f'{nome_do_ticker}_estudo.csv')  
-        self.resetar_estrututa(self._estrutura_para_comparacao) 
-         
-    def log_erro(self, mensagem):
-        """."""
+        self.resetar_estrututa(self._estrutura_de_dados_com_erros) 
+
+        self.salva_log_desempenho(f'{nome_do_ticker} --> Finalizou Processamento: {datetime.now()}')
+        self.salva_log_desempenho(f'{nome_do_ticker} --> Tempo total de processamento: {datetime.now() - hora_inicial_do_processamento}')
+        self.salva_log_desempenho(f'{"-" * 80}', )
+
+    def log_erro(self, mensagem) -> None:
+        """Exibe na tela o erro."""
         print(f'ERROR NO PROCESSAMENTO:')
         print(mensagem)
         print('-' * 50)
  
-    def retornar_feriados_integrais_da_b3(self):
+    def salva_log_desempenho(self, registro, reiniciar_arquivo=False) -> None:
+        """Salva em um arquivo o desempenho."""
+        if reiniciar_arquivo:
+            if os.path.exists('log-desempenho.txt'):
+                os.remove('log-desempenho.txt')
+
+        if os.path.exists('log-desempenho.txt'):
+            with open('log-desempenho.txt', 'a', newline='', encoding='utf-8') as arquivo:
+                writer = csv.writer(arquivo)
+                writer.writerow([registro])
+            return
+
+        with open('log-desempenho.txt', 'w', newline='', encoding='utf-8') as arquivo:
+            writer = csv.writer(arquivo)
+            writer.writerow([registro])
+
+    def retornar_feriados_integrais_da_b3(self) -> list:
+        """Acessa o arquivo json com o feriados da b3 e retorna os dados."""
         with open(DIRETORIO_DADOS_JSON_DOS_FERIADOS_B3, 'r') as arquivo:
             return json.load(arquivo)["feriado-dia-inteiro"]
 
@@ -175,8 +204,8 @@ class Alertador:
             return False
         return True
 
-    def eh_dados_ajustados(self, dia_int):
-        """."""
+    def eh_dados_ajustados(self, dia_int) -> bool:
+        """Verifica se o dia atual está no periodo dos dados ajustados ou não."""
         if dia_int < PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO:
             return True
         return False
@@ -187,60 +216,53 @@ class Alertador:
         
         df_diario = pd.read_csv(path_diario, sep=separador)
         df_diario['Data'] = df_diario['Data'].astype(int)
-
         return df_diario
 
     def retorna_dataframe_nao_ajustado(self, ticker, separador=';'):
         """."""
         path_diario = os.path.join(DIRETORIO_DADOS_DIARIOS_SEM_AJUSTE, f'{ticker}_DIARIO.csv')
-        df_diario = pd.read_csv(path_diario, sep=separador) 
 
+        df_diario = pd.read_csv(path_diario, sep=separador) 
         df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
         df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
         df_diario['Data'] = df_diario['Data'].astype(int)
-        
+
         return df_diario
 
-    def finalizou_dados_ajustados(self, dia_int):
+    def finalizou_dados_ajustados(self, dia_int) -> bool:
         """Verifica se o dia atual é o primeiro dia com dados não ajustados."""
         if dia_int == PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO:
             return True
         return False
 
     def analisar_dados_com_problemas_no_ajustado(self):
-        """."""
-        df_dados = pd.DataFrame(self._estrutura_para_comparacao)
+        """Utilizamos essa função para realizar à moda dos dados que tiveram 
+        problemas e se necessario ver se as diferenças são iguais à moda."""
+        df_dados_com_erros = pd.DataFrame(self._estrutura_de_dados_com_erros)
 
-        if not self.tem_dias_suficientes_de_erros(df_dados['<data>']):
+        if not self.tem_dias_suficientes_de_erros(df_dados_com_erros['<data>']):
             return
 
-        moda_diferenca_abertura = df_dados['<diferenças_das_aberturas>'].mode()
+        moda_diferenca_abertura = df_dados_com_erros['<diferenças_das_aberturas>'].mode()
 
-        df_comparacao = df_dados[df_dados['<diferenças_das_aberturas>'] != moda_diferenca_abertura[0]]
+        df_comparacao = df_dados_com_erros[df_dados_com_erros['<diferenças_das_aberturas>'] != moda_diferenca_abertura[0]]
         df_comparacao['<moda>'] = moda_diferenca_abertura[0]
         
-        self._estrutura_para_comparacao = df_comparacao.to_dict('list')
-        """
-        if len(self._estrutura_para_comparacao['Data']) == 0:
-            self._estrutura_para_comparacao = {
-                item: []
-                for item in df_comparacao.to_dict()
-            }
-        """
+        self._estrutura_de_dados_com_erros = df_comparacao.to_dict('list')
         
-    def tem_dias_suficientes_de_erros(self, array_data):
-        """."""
+    def tem_dias_suficientes_de_erros(self, array_data) -> bool:
+        """Retorna se o array tem mais ou pelo menos igual a 20 elementos."""
         if len(array_data) >= 20:
             return True
         return False
     
-    def tem_dados_no_dataframe(self, daaframe):
-        """."""
+    def tem_dados_no_dataframe(self, daaframe) -> bool:
+        """Retorna se o elemento tem pelo menos uma linha de dados."""
         if daaframe.shape[0] == 0:
             return False
         return True
 
-    def adiciona_informacoes_na_estrutura_de_comparacoes(self, eh_ajustado=True,**kwargs):
+    def adiciona_informacoes_na_estrutura_de_dados_com_erros(self, eh_ajustado=True,**kwargs):
         """."""
         dia_int = kwargs.get('INFORMACAO_DIA_INT')
         nome_do_ticker = kwargs.get('INFORMACAO_TICKER')
@@ -251,26 +273,26 @@ class Alertador:
         fechamento_do_minuto = kwargs.get('INFORMACAO_FECHAMENTO_MINUTO')
         diferenças_dos_fechamento = kwargs.get('INFORMACAO_DIFERENCA_FECHAMENTO')
 
-        self._estrutura_para_comparacao['<data>'].append(dia_int)
-        self._estrutura_para_comparacao['<ticker>'].append(nome_do_ticker)
-        self._estrutura_para_comparacao['<abertura_do_diario>'].append(abertura_diario)
-        self._estrutura_para_comparacao['<abertura_do_minuto>'].append(abertura_do_minuto)
-        self._estrutura_para_comparacao['<diferenças_das_aberturas>'].append(diferenças_das_aberturas)
-        self._estrutura_para_comparacao['<fechamento_do_diario>'].append(fechamento_do_diario)
-        self._estrutura_para_comparacao['<fechamento_do_minuto>'].append(fechamento_do_minuto)
-        self._estrutura_para_comparacao['<diferenças_dos_fechamento>'].append(diferenças_dos_fechamento)
+        self._estrutura_de_dados_com_erros['<data>'].append(dia_int)
+        self._estrutura_de_dados_com_erros['<ticker>'].append(nome_do_ticker)
+        self._estrutura_de_dados_com_erros['<abertura_do_diario>'].append(abertura_diario)
+        self._estrutura_de_dados_com_erros['<abertura_do_minuto>'].append(abertura_do_minuto)
+        self._estrutura_de_dados_com_erros['<diferenças_das_aberturas>'].append(diferenças_das_aberturas)
+        self._estrutura_de_dados_com_erros['<fechamento_do_diario>'].append(fechamento_do_diario)
+        self._estrutura_de_dados_com_erros['<fechamento_do_minuto>'].append(fechamento_do_minuto)
+        self._estrutura_de_dados_com_erros['<diferenças_dos_fechamento>'].append(diferenças_dos_fechamento)
 
         if eh_ajustado:
-            self._estrutura_para_comparacao['<problemas>'].append('Ajustado')
-            self._estrutura_para_comparacao['<moda>'].append(0)
+            self._estrutura_de_dados_com_erros['<problemas>'].append('Ajustado')
+            self._estrutura_de_dados_com_erros['<moda>'].append(0)
             return
 
-        self._estrutura_para_comparacao['<problemas>'].append('Nao_Ajustado')
-        self._estrutura_para_comparacao['<moda>'].append(1)    
+        self._estrutura_de_dados_com_erros['<problemas>'].append('Nao_Ajustado')
+        self._estrutura_de_dados_com_erros['<moda>'].append(1)    
 
     def primeira_e_segunda_validacao_for_ok( 
         self, abertura_intraday, abertura_diario, fechamento_intraday, fechamento_diario
-        ):
+        ) -> bool:
         """Realiza a comparação entre as aberturas (Intrada vs Diario) 
         e fechamento(Intrada vs Diario)"""
         if (abertura_intraday == abertura_diario) and (fechamento_intraday == fechamento_diario):
@@ -278,7 +300,7 @@ class Alertador:
         return False
 
     def retorna_dias_uteis_b3(self, dataframe_intraday, tipo_calendario='B3'):
-        """."""
+        """Retorna os dias úteis no periodo do dataframe intraday."""
         primeira_data = datetime.strptime(str(dataframe_intraday['<date>'].iloc[0]), "%Y%m%d").strftime("%Y-%m-%d")
         ultima_data = datetime.strptime(str(dataframe_intraday['<date>'].iloc[-1]), "%Y%m%d").strftime("%Y-%m-%d")
 
@@ -287,8 +309,8 @@ class Alertador:
         return calendario.index.astype(str)
 
     def inicializa_campos_de_analise(self, estrutura_de_dados) -> dict:
-        """É utilizado para retornar os campos que irão 
-        para as planilhas dos ativos para as comparações."""
+        """É utilizado para retornar os campos que irão para as 
+        planilhas dos ativos para as comparações com erros."""
         if not estrutura_de_dados:
             return {
                 '<data>': [],
@@ -309,32 +331,69 @@ class Alertador:
         if not estrutura_de_dados:
             return {
                 '<ticker>': [],
-                '<periodo_inicial>': [],
-                '<periodo_final>': [],
+                '<fonte_nelogica>': [],
+                '<periodo_inicial_nelogica>': [],
+                '<periodo_final_nelogica>': [],
+                '<total_dias_nelogica>': [],
+                '<integridade_nelogica>': [],
+                '<fonte_b3>': [],
+                '<periodo_inicial_b3>': [],
+                '<periodo_final_b3>': [],
+                '<total_dias_b3>': [],
+                '<integridade_b3>': [],
                 '<total_dias>': [],
                 '<dias_com_erros>': [],
-                '<percentual_integridade>': [],
+                '<integridade_total>': [],
             }
 
-    def adicionar_dados_na_estrutura_estatistica(self, daataframe_intraday, dataframe_comparacao, ticker):
+    def adicionar_dados_na_estrutura_estatistica(self, dataframe_intraday, dataframe_dados_com_erros, ticker):
         """."""
-        dias_com_erros = dataframe_comparacao.shape[0]
-        periodo_dados = len(daataframe_intraday['<date>'].iloc[1:].unique())  
+        dias_com_erros = dataframe_dados_com_erros.shape[0]
+        periodo_dados = len(dataframe_intraday['<date>'].iloc[1:].unique())  
 
-        daataframe_intraday['<date>'] = daataframe_intraday['<date>'].astype(str)
-        daataframe_intraday['<date>'] = pd.to_datetime(daataframe_intraday['<date>'])   
+        # Período de Dados Nelogica (Ajustado):
+        df_nelogica = dataframe_intraday[dataframe_intraday['<date>'] < PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO]
+        df_com_erros_nelogica = dataframe_dados_com_erros[dataframe_dados_com_erros['<data>'] < PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO]
+    
+        nelogica_periodo_com_erros = len(df_com_erros_nelogica['<data>'].unique()) 
+        nelogica_periodo_total = len(df_nelogica['<date>'].iloc[1:].unique())  
+        self.formata_data_inteiro_para_datetime(df_nelogica)
+        
+        # Período de Dados B3 (Não Ajustado):
+        df_b3 = dataframe_intraday[dataframe_intraday['<date>'] >= PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO]
+        df_com_erros_b3 = dataframe_dados_com_erros[dataframe_dados_com_erros['<data>'] >= PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO]
+
+        b3_periodo_com_erros = len(df_com_erros_b3['<data>'].unique()) 
+        b3_periodo_total = len(df_b3['<date>'].unique())  
+        self.formata_data_inteiro_para_datetime(df_b3)
+
+        self.formata_data_inteiro_para_datetime(dataframe_intraday) 
 
         self._estrutura_estatistica['<ticker>'].append(ticker)
-        self._estrutura_estatistica['<periodo_inicial>'].append(daataframe_intraday['<date>'].min())
-        self._estrutura_estatistica['<periodo_final>'].append(daataframe_intraday['<date>'].min())
-        self._estrutura_estatistica['<total_dias>'].append(daataframe_intraday['<date>'].max() - daataframe_intraday['<date>'].min())
+        self._estrutura_estatistica['<fonte_nelogica>'].append('Nelogica')
+        self._estrutura_estatistica['<periodo_inicial_nelogica>'].append(df_nelogica['<date>'].min())
+        self._estrutura_estatistica['<periodo_final_nelogica>'].append(df_nelogica['<date>'].max())
+        self._estrutura_estatistica['<total_dias_nelogica>'].append(df_nelogica['<date>'].max() - df_nelogica['<date>'].min())
+        self._estrutura_estatistica['<integridade_nelogica>'].append(round(((nelogica_periodo_total - nelogica_periodo_com_erros) / nelogica_periodo_total) * 100, 2))
+        ...
+        self._estrutura_estatistica['<fonte_b3>'].append('B3')
+        self._estrutura_estatistica['<periodo_inicial_b3>'].append(df_b3['<date>'].min())
+        self._estrutura_estatistica['<periodo_final_b3>'].append(df_b3['<date>'].max())
+        self._estrutura_estatistica['<total_dias_b3>'].append(df_b3['<date>'].max() - df_b3['<date>'].min())
+        self._estrutura_estatistica['<integridade_b3>'].append(round(((b3_periodo_total - b3_periodo_com_erros) / b3_periodo_total) * 100, 2))
+        ...
+        self._estrutura_estatistica['<total_dias>'].append(dataframe_intraday['<date>'].max() - dataframe_intraday['<date>'].min())
         self._estrutura_estatistica['<dias_com_erros>'].append(dias_com_erros)
-        self._estrutura_estatistica['<percentual_integridade>'].append(round(((periodo_dados - dias_com_erros) / periodo_dados) * 100, 2))
+        self._estrutura_estatistica['<integridade_total>'].append(round(((periodo_dados - dias_com_erros) / periodo_dados) * 100, 2))
+
+    def formata_data_inteiro_para_datetime(self, dataframe):
+        dataframe['<date>'] = dataframe['<date>'].astype(str)
+        dataframe['<date>'] = pd.to_datetime(dataframe['<date>']) 
 
     def salva_dados_no_diretorio_alertador(self, dataframe, nome_arquivo):
         """Salva os dados no diretorio Database_Alertador."""
         path_ativo = os.path.join(DIRERORIO_PARA_SALVAR_DADOS_ALERTADOR, nome_arquivo)
-        dataframe.to_csv(path_ativo, sep=';', index=False)
+        dataframe.to_csv(path_ativo, encoding='utf-8', sep=';', index=False)
 
     def resetar_estrututa(self, estrutua):
         """Reseta a estrutura de comparação, para 
