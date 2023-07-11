@@ -4,7 +4,6 @@ from pandas_market_calendars import get_calendar
 from datetime import datetime
 
 
-
 DIRETORIO_INTRADAY = r'D:\DADOS_FINANCEIROS\Database_PrincipaisAcoes'
 DIRETORIO_DIARIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_SPLIT'
 DIRETORIO_DIARIO_SEM_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario'
@@ -124,10 +123,8 @@ def main():
                     df_diario['Data'] = df_diario['Data'].astype(int)
                     ...
 
-
                 abertura_diario = df_diario['Abertura']
                 fechamento_diario = df_diario['Fechamento']
-
 
                 if df_intraday_unique.shape[0] == 0:
                     REGISTROS['Data'].append(dia_int)
