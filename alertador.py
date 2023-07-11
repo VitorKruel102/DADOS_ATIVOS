@@ -111,6 +111,7 @@ def main():
                             item: []
                             for item in df.to_dict()
                         }
+
                     df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
                     df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
                     df_diario['Data'] = df_diario['Data'].astype(int)
@@ -122,8 +123,12 @@ def main():
                     df_diario['Data'] = df_diario['Data'].dt.strftime('%Y%m%d')
                     df_diario['Data'] = df_diario['Data'].astype(int)
                     ...
+
+
                 abertura_diario = df_diario['Abertura']
                 fechamento_diario = df_diario['Fechamento']
+
+
                 if df_intraday_unique.shape[0] == 0:
                     REGISTROS['Data'].append(dia_int)
                     REGISTROS['Ticker'].append(ativo)
@@ -175,6 +180,7 @@ def main():
                         REGISTROS['Problema'].append('Nao_Ajustado')
                         REGISTROS['Moda'].append(1)
 
+            
             df = pd.DataFrame(REGISTROS)
             periodo_com_problemas = df.shape[0]
             if periodo_com_problemas == 0: 
