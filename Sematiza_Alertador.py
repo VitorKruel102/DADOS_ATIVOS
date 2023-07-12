@@ -61,18 +61,18 @@ class Alertador:
         self.salva_log_desempenho(f'{"-" * 80}', )
 
         self.feriados_b3 = self.retornar_feriados_integrais_da_b3()
-        self._estrutura_de_dados_com_erros = self.inicializa_campos_de_analise(None)
-        self._estrutura_estatistica = self.inicializa_campos_dados_estatisticos(None)
+        self._estrutura_de_dados_com_erros = self.inicializa_campos_de_analise()
+        self._estrutura_estatistica = self.inicializa_campos_dados_estatisticos()
 
         self.enviar_dados_intraday()
-        df_estatistica = pd.DataFrame(self._estrutura_estatistica)
-        self.salva_dados_no_diretorio_alertador(df_estatistica, f'Estatistica_Tickes.csv')
+        self.finaliza_os_dados_estatisticos()
 
         self.salva_log_desempenho(f'FINALIZAÇÃO: {datetime.now()}.')
         self.salva_log_desempenho(f'TEMPO TOTAL DE EXECUÇÃO: {datetime.now() - self.inicio_processamento_global}.')
 
     def enviar_dados_intraday(self) -> str:
-        """Enviar dados do Intraday para a função manipular dados para a comparação."""
+        """Enviar dados do Intraday para a função gerenciar 
+        comparações para validação dos dados."""
         for path, _, arquivos in os.walk(DIRETORIO_DADOS_INTRADAY):
             for arquivo in arquivos:
                 path_arquivo = os.path.join(path, arquivo)
@@ -80,8 +80,8 @@ class Alertador:
                 self.gerenciar_comparacoes(path_arquivo)
 
     def gerenciar_comparacoes(self, path_arquivo):
-        """Sua funcionalida é gerenciar os dados para realizar as 
-        comparações dos dados do Intraday com o do ProfitPro."""
+        """Sua funcionalidade é gerenciar os processos para a 
+        comparação dos dados do Intraday com o do Profit Pro."""
         nome_do_ticker = path_arquivo.split('\\')[-1].split('_')[0]
 
         df_intraday = pd.read_csv(path_arquivo, sep=';')
@@ -178,7 +178,8 @@ class Alertador:
         print('-' * 50)
  
     def salva_log_desempenho(self, registro, reiniciar_arquivo=False) -> None:
-        """Salva em um arquivo o desempenho."""
+        """Salva na raiz do projeto o arquivo log-desempenho.txt responsável 
+        por registrar o desempenho em locais desejados."""
         if reiniciar_arquivo:
             if os.path.exists('log-desempenho.txt'):
                 os.remove('log-desempenho.txt')
@@ -194,7 +195,7 @@ class Alertador:
             writer.writerow([registro])
 
     def retornar_feriados_integrais_da_b3(self) -> list:
-        """Acessa o arquivo json com o feriados da b3 e retorna os dados."""
+        """Retorna dados do arquivo feriados-b3.json com todos os feriados integrais da b3."""
         with open(DIRETORIO_DADOS_JSON_DOS_FERIADOS_B3, 'r') as arquivo:
             return json.load(arquivo)["feriado-dia-inteiro"]
 
@@ -205,7 +206,7 @@ class Alertador:
         return True
 
     def eh_dados_ajustados(self, dia_int) -> bool:
-        """Verifica se o dia atual está no periodo dos dados ajustados ou não."""
+        """Verifica se o dia está no período de dados ajustados ou não."""
         if dia_int < PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO:
             return True
         return False
@@ -237,7 +238,7 @@ class Alertador:
 
     def analisar_dados_com_problemas_no_ajustado(self):
         """Utilizamos essa função para realizar à moda dos dados que tiveram 
-        problemas e se necessario ver se as diferenças são iguais à moda."""
+        problemas e se necessário ver se as diferenças são iguais à moda."""
         df_dados_com_erros = pd.DataFrame(self._estrutura_de_dados_com_erros)
 
         if not self.tem_dias_suficientes_de_erros(df_dados_com_erros['<data>']):
@@ -257,7 +258,7 @@ class Alertador:
         return False
     
     def tem_dados_no_dataframe(self, daaframe) -> bool:
-        """Retorna se o elemento tem pelo menos uma linha de dados."""
+        """Retorna se o DataFrame tem pelo menos uma linha."""
         if daaframe.shape[0] == 0:
             return False
         return True
@@ -294,7 +295,7 @@ class Alertador:
         self, abertura_intraday, abertura_diario, fechamento_intraday, fechamento_diario
         ) -> bool:
         """Realiza a comparação entre as aberturas (Intrada vs Diario) 
-        e fechamento(Intrada vs Diario)"""
+        e fechamentos(Intrada vs Diario)"""
         if (abertura_intraday == abertura_diario) and (fechamento_intraday == fechamento_diario):
             return True
         return False
@@ -308,43 +309,41 @@ class Alertador:
         calendario = b3_calendario.schedule(start_date=primeira_data, end_date=ultima_data)
         return calendario.index.astype(str)
 
-    def inicializa_campos_de_analise(self, estrutura_de_dados) -> dict:
+    def inicializa_campos_de_analise(self) -> dict:
         """É utilizado para retornar os campos que irão para as 
         planilhas dos ativos para as comparações com erros."""
-        if not estrutura_de_dados:
-            return {
-                '<data>': [],
-                '<ticker>' : [],
-                '<abertura_do_diario>': [],
-                '<abertura_do_minuto>': [],
-                '<diferenças_das_aberturas>': [],
-                '<fechamento_do_diario>': [],
-                '<fechamento_do_minuto>': [],
-                '<diferenças_dos_fechamento>': [],
-                '<moda>': [],
-                '<problemas>': [],
-            }
+        return {
+            '<data>': [],
+            '<ticker>' : [],
+            '<abertura_do_diario>': [],
+            '<abertura_do_minuto>': [],
+            '<diferenças_das_aberturas>': [],
+            '<fechamento_do_diario>': [],
+            '<fechamento_do_minuto>': [],
+            '<diferenças_dos_fechamento>': [],
+            '<moda>': [],
+            '<problemas>': [],
+        }
 
-    def inicializa_campos_dados_estatisticos(self, estrutura_de_dados):
+    def inicializa_campos_dados_estatisticos(self):
         """É utilizado para criar uma planilha com todos os ativos e 
         seu percentual de integridade."""
-        if not estrutura_de_dados:
-            return {
-                '<ticker>': [],
-                '<fonte_nelogica>': [],
-                '<periodo_inicial_nelogica>': [],
-                '<periodo_final_nelogica>': [],
-                '<total_dias_nelogica>': [],
-                '<integridade_nelogica>': [],
-                '<fonte_b3>': [],
-                '<periodo_inicial_b3>': [],
-                '<periodo_final_b3>': [],
-                '<total_dias_b3>': [],
-                '<integridade_b3>': [],
-                '<total_dias>': [],
-                '<dias_com_erros>': [],
-                '<integridade_total>': [],
-            }
+        return {
+            '<ticker>': [],
+            '<fonte_nelogica>': [],
+            '<periodo_inicial_nelogica>': [],
+            '<periodo_final_nelogica>': [],
+            '<total_dias_nelogica>': [],
+            '<integridade_nelogica>': [],
+            '<fonte_b3>': [],
+            '<periodo_inicial_b3>': [],
+            '<periodo_final_b3>': [],
+            '<total_dias_b3>': [],
+            '<integridade_b3>': [],
+            '<total_dias>': [],
+            '<dias_com_erros>': [],
+            '<integridade_total>': [],
+        }
 
     def adicionar_dados_na_estrutura_estatistica(self, dataframe_intraday, dataframe_dados_com_erros, ticker):
         """."""
@@ -386,9 +385,9 @@ class Alertador:
         self._estrutura_estatistica['<dias_com_erros>'].append(dias_com_erros)
         self._estrutura_estatistica['<integridade_total>'].append(round(((periodo_dados - dias_com_erros) / periodo_dados) * 100, 2))
 
-    def formata_data_inteiro_para_datetime(self, dataframe):
-        dataframe['<date>'] = dataframe['<date>'].astype(str)
-        dataframe['<date>'] = pd.to_datetime(dataframe['<date>']) 
+    def formata_data_inteiro_para_datetime(self, dataframe, nome_da_coluna_data='<date>'):
+        dataframe[nome_da_coluna_data] = dataframe[nome_da_coluna_data].astype(str)
+        dataframe[nome_da_coluna_data] = pd.to_datetime(dataframe[nome_da_coluna_data]) 
 
     def salva_dados_no_diretorio_alertador(self, dataframe, nome_arquivo):
         """Salva os dados no diretorio Database_Alertador."""
@@ -396,10 +395,15 @@ class Alertador:
         dataframe.to_csv(path_ativo, encoding='utf-8', sep=';', index=False)
 
     def resetar_estrututa(self, estrutua):
-        """Reseta a estrutura de comparação, para 
-        poder salvar novos dados de outro ativo."""
+        """Reseta a estrutura para poder 
+        salvar novos dados de outro ativo."""
         for coluna in estrutua.keys():
             estrutua[coluna].clear()
-    
+
+    def finaliza_os_dados_estatisticos(self):
+        """Cria um dataframe do dados estatísticos e 
+        encaminha para salvar dados."""
+        df_estatistica = pd.DataFrame(self._estrutura_estatistica)
+        self.salva_dados_no_diretorio_alertador(df_estatistica, f'Estatistica_Tickes.csv')    
 
 objeto = Alertador()
