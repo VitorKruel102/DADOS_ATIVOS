@@ -349,17 +349,25 @@ class Alertador:
         self._estrutura_estatistica['<periodo_inicial_nelogica>'].append(df_nelogica['<date>'].min())
         self._estrutura_estatistica['<periodo_final_nelogica>'].append(df_nelogica['<date>'].max())
         self._estrutura_estatistica['<total_dias_nelogica>'].append(df_nelogica['<date>'].max() - df_nelogica['<date>'].min())
-        self._estrutura_estatistica['<integridade_nelogica>'].append(round(((nelogica_periodo_total - nelogica_periodo_com_erros) / nelogica_periodo_total) * 100, 2))
+        self._estrutura_estatistica['<integridade_nelogica>'].append(self.percentual_integridade(nelogica_periodo_total, nelogica_periodo_com_erros))
         ...
         self._estrutura_estatistica['<fonte_b3>'].append('B3')
         self._estrutura_estatistica['<periodo_inicial_b3>'].append(df_b3['<date>'].min())
         self._estrutura_estatistica['<periodo_final_b3>'].append(df_b3['<date>'].max())
         self._estrutura_estatistica['<total_dias_b3>'].append(df_b3['<date>'].max() - df_b3['<date>'].min())
-        self._estrutura_estatistica['<integridade_b3>'].append(round(((b3_periodo_total - b3_periodo_com_erros) / b3_periodo_total) * 100, 2))
+        self._estrutura_estatistica['<integridade_b3>'].append(self.percentual_integridade(b3_periodo_total, b3_periodo_com_erros))
         ...
         self._estrutura_estatistica['<total_dias>'].append(dataframe_intraday['<date>'].max() - dataframe_intraday['<date>'].min())
         self._estrutura_estatistica['<dias_com_erros>'].append(dias_com_erros)
-        self._estrutura_estatistica['<integridade_total>'].append(round(((periodo_dados - dias_com_erros) / periodo_dados) * 100, 2))
+        self._estrutura_estatistica['<integridade_total>'].append(self.percentual_integridade(periodo_dados, dias_com_erros))
+
+    def percentual_integridade(self, periodo_total, periodo_com_erros):
+        """Retorna a percentual de integridade dos dados."""
+        try:
+            return round(((periodo_total - periodo_com_erros) / periodo_total) * 100, 2)
+        except ZeroDivisionError:
+            return 100.00
+
 
     def formata_data_inteiro_para_datetime(self, dataframe, nome_da_coluna_data='<date>'):
         dataframe[nome_da_coluna_data] = dataframe[nome_da_coluna_data].astype(str)
