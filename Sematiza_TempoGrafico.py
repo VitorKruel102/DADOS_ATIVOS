@@ -1,21 +1,6 @@
 """
-Projeto solicitado pelo Luciano para criação
-de planilhas para os ativos de interesse conforme
-os tempos gráficos solicidados, sendo eles:
-
-    -> 1, 5, 10, 15, 20, 30, 60 minutos e Diario;
-
-Os ativos precisam estar ajustados, e o periodo de 
-abertura para esses candles de interesse devem ser 30min
-após a abertura normal do pregrão e 25min antes do fechamento.
-
-Os dados são utilizados no formato do TradeIntraday.
-
-Colunas:
-
-    <ticker>;<date>;<time>;<trades>;<close>;<low>;<high>;<open>;<vol>;<qty>;<aft>
-
 Criado: 07/07/2023 08:50
+
 Autor: Vitor Kruel
 """
 import csv
@@ -50,7 +35,7 @@ TEMPOS_GRAFICOS_INTERESSE = [
 ]
 
 
-class GerenciadorDaMontagemDosCandes:
+class CriaTemposGraficos:
     candles_prontos = {}
 
     def __init__(self, precisa_deletar_dados=True) -> None:
@@ -112,8 +97,8 @@ class GerenciadorDaMontagemDosCandes:
                 if not DIA_ANALISADO:
                     DIA_ANALISADO = __data
                     dados_do_ativo = self.inicializar_estrutura_dos_dados(__ticker)
-                    hora_do_fechamento_do_mercado = self.hora_do_fechamento(__data)
-                    self.ajusta_horario_de_fechamento_primeiro_candle(
+                    hora_do_fechamento_do_mercado = self.hora_que_fecha_mercado(__data)
+                    self.adiciona_na_estrutura_hora_de_abertura_e_fechamento_primeiro_candle(
                         INIT_TIME=__time_hhmm, 
                         INIT_TICKER=__ticker, 
                         INIT_DADOS=dados_do_ativo
@@ -125,8 +110,8 @@ class GerenciadorDaMontagemDosCandes:
                         MONTAGEM_DATA = DIA_ANALISADO,
                     )
 
-                    hora_do_fechamento_do_mercado = self.hora_do_fechamento(__data)
-                    self.ajusta_horario_de_fechamento_primeiro_candle(
+                    hora_do_fechamento_do_mercado = self.hora_que_fecha_mercado(__data)
+                    self.adiciona_na_estrutura_hora_de_abertura_e_fechamento_primeiro_candle(
                         INIT_TIME=__time_hhmm, 
                         INIT_TICKER=__ticker, 
                         INIT_DADOS=dados_do_ativo
@@ -204,10 +189,10 @@ class GerenciadorDaMontagemDosCandes:
         que será utilizado para a monstagem dos candles."""
         estrutura = {ticker: {}}
 
-        for tempo_de_interese in TEMPOS_GRAFICOS_INTERESSE:
-            if tempo_de_interese == 'DIARIO':
+        for tempo_de_interesse in TEMPOS_GRAFICOS_INTERESSE:
+            if tempo_de_interesse == 'DIARIO':
                 estrutura[ticker].update({
-                    tempo_de_interese: {
+                    tempo_de_interesse: {
                         '<qty>'  : [],
                         '<prices>': [],
                         '<vol>'  : [],
@@ -216,7 +201,7 @@ class GerenciadorDaMontagemDosCandes:
                 })
             else:
                 estrutura[ticker].update({
-                    tempo_de_interese: {
+                    tempo_de_interesse: {
                         'horario_de_fechamento': None,
                         'horario_de_abertura': None,
                         '<qty>'  : [],
@@ -229,7 +214,7 @@ class GerenciadorDaMontagemDosCandes:
         assert any(estrutura)
         return estrutura
 
-    def hora_do_fechamento(self, data_atual):
+    def hora_que_fecha_mercado(self, data_atual):
         """Retornar o horário de fechamento do 
         mercado em relação ao dia informado."""
         if data_atual >= 20041103 and data_atual < 20050402:
@@ -296,7 +281,7 @@ class GerenciadorDaMontagemDosCandes:
         else:
             return 1655        
 
-    def ajusta_horario_de_fechamento_primeiro_candle(self, **kwargs) -> None:
+    def adiciona_na_estrutura_hora_de_abertura_e_fechamento_primeiro_candle(self, **kwargs) -> None:
         """Sua funcionalida é retornar o horário de fechamento do primeiro
         candle de todos os tempos gráficos, menos do gráfico diário."""
         horario_atual = kwargs.get('INIT_TIME')
@@ -559,4 +544,4 @@ class GerenciadorDaMontagemDosCandes:
             os.mkdir(diretorio_do_tempo_grafico)
 
 
-objeto = GerenciadorDaMontagemDosCandes()
+objeto = CriaTemposGraficos()
