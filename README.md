@@ -32,8 +32,9 @@ Sua avaliação é feita comparando os dados intraday de abertura e fechamento c
 os dados diários do Profit Pro.
 
 É importante lembrar que existem dados ajustados e não ajustados no histórico:
-    - DIA < 20211013 (DADOS AJUSTADOS)
-    - DIA >= 20211013 (DADOS NÃO AJUSTADOS)
+
+- DIA < 20211013 (DADOS AJUSTADOS)
+- DIA >= 20211013 (DADOS NÃO AJUSTADOS)
 
 Portanto, é necessário identificar a data para determinar se devemos usar o Profit ajustado ou não ajustado na análise.
 
