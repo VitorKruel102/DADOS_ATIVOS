@@ -1,4 +1,5 @@
 import os 
+import csv
 import pandas as pd
 from pandas_market_calendars import get_calendar
 from datetime import datetime
@@ -6,7 +7,7 @@ from datetime import datetime
 
 
 DIRETORIO_INTRADAY = r'D:\DADOS_FINANCEIROS\Database_PrincipaisAcoes'
-DIRETORIO_DIARIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_SPLIT'
+DIRETORIO_DIARIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'
 DIRETORIO_DIARIO_SEM_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario'
 PATH_ALERTADOR = r'D:\DADOS_FINANCEIROS\Database_Alertador'
 
@@ -71,10 +72,14 @@ ERROS = {
 
 def main():
     global REGISTROS, ERROS, DADOS_ESTATISTICOS
+    
     for path, dir, files in os.walk(DIRETORIO_INTRADAY):
         for file in files:
             ativo = file.split('_')[0]
             print(ativo)
+
+            INICIO_PROCESSAMENTO = datetime.now()
+            salva_log_desempenho(F'{ativo}: Inicio do processamento = {INICIO_PROCESSAMENTO}')
 
             df_intraday = pd.read_csv(os.path.join(DIRETORIO_INTRADAY, file), sep=';')
             periodo_dados = len(df_intraday['<date>'].iloc[1:].unique())    
@@ -196,6 +201,9 @@ def main():
             for colunas in REGISTROS.keys():
                 REGISTROS[colunas].clear()
 
+            salva_log_desempenho(F'{ativo}: Final do processamento = {datetime.now()}')
+            salva_log_desempenho(F'{ativo}: Total do processamento = {datetime.now() - INICIO_PROCESSAMENTO}')
+
     df = pd.DataFrame(DADOS_ESTATISTICOS)                
     df.to_csv(os.path.join(PATH_ALERTADOR, f'Estatistica_Tickes.csv'), sep=';', index=False)
 
@@ -265,7 +273,7 @@ def main_CO41():
             continue
 
         if dia_int < 20211013:                
-            df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_AJUSTADO, f'{ativo}_DIARIO_S.csv'), sep=';')
+            df_diario = pd.read_csv(os.path.join(DIRETORIO_DIARIO_AJUSTADO, f'{ativo}_DIARIO_NAS.csv'), sep=';')
             is_adjusted = True
             df_diario['Data'] = df_diario['Data'].astype(int)
 
@@ -383,7 +391,26 @@ def main_CO41():
         DADOS_ESTATISTICOS[colunas].clear()
 
     print(ERROS)
- 
-    
+
+def salva_log_desempenho(registro, reiniciar_arquivo=False) -> None:
+    """."""
+    if reiniciar_arquivo:
+        if os.path.exists('log-desempenho.txt'):
+            os.remove('log-desempenho.txt')
+
+    if os.path.exists('log-desempenho.txt'):
+        with open('log-desempenho.txt', 'a', newline='', encoding='utf-8') as arquivo:
+            writer = csv.writer(arquivo)
+            writer.writerow([registro])
+        return
+
+    with open('log-desempenho.txt', 'w', newline='', encoding='utf-8') as arquivo:
+        writer = csv.writer(arquivo)
+        writer.writerow([registro])
+
+
 if __name__ == '__main__':
-    main_CO41()
+    INICIO = datetime.now()
+    salva_log_desempenho(F'INICIALIZAÇÃO: {datetime.now()}', reiniciar_arquivo=True)
+    main()
+    salva_log_desempenho(F'FINALIZAÇÃO: {datetime.now() - INICIO}', reiniciar_arquivo=True)
