@@ -45,7 +45,7 @@ Serão realizados até três testes antes de confirmar os problemas nos dados:
     - Os dias que não passaram no teste, será realizado o calculo da Moda para ver se mantém constantes a variação.
     (Precisa ter no mínimo 20 dias com problemas para tirar a moda).
 
-Após uma conversa com Luciano, foi acordado que, se a variação for diferente no período de dados ajustados por dividendos, 
+Após uma conversa com Luciano, foi acordado que, se a diferença(abertura e fechamento) for diferente no período de dados ajustados por dividendos, 
 mas se mantiver estável no período, consideraremos os dados como íntegros. Para isso, todos os dados que não foram 
 inicialmente validados pelo fechamento e abertura precisarão ter sua moda calculada. Todos os dias que forem iguais 
 à moda serão considerados corretos e passarão no teste.
