@@ -56,6 +56,8 @@ PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO = 20211013
 
 class Alertador:
     def __init__(self) -> None:
+        self.deletar_dados_antigos()
+
         self.inicio_processamento_global = datetime.now()
         self.salva_log_desempenho(f'INICIALIZAÇÃO: {self.inicio_processamento_global}', reiniciar_arquivo=True)
         self.salva_log_desempenho(f'{"-" * 80}', )
@@ -65,10 +67,16 @@ class Alertador:
         self._estrutura_estatistica = self.inicializa_campos_dados_estatisticos()
 
         self.enviar_dados_intraday()
-        self.finaliza_os_dados_estatisticos()
+        self.finaliza_os_dados_estatisticos()    
 
         self.salva_log_desempenho(f'FINALIZAÇÃO: {datetime.now()}.')
         self.salva_log_desempenho(f'TEMPO TOTAL DE EXECUÇÃO: {datetime.now() - self.inicio_processamento_global}.')
+
+    def deletar_dados_antigos(self):
+        """."""
+        for path, _, arquivos in os.walk(DIRERORIO_PARA_SALVAR_DADOS_ALERTADOR):
+            for arquivo in arquivos:
+                os.remove(os.path.join(path, arquivo))
 
     def enviar_dados_intraday(self) -> str:
         """Enviar dados do Intraday para a função gerenciar 
@@ -405,5 +413,6 @@ class Alertador:
         encaminha para salvar dados."""
         df_estatistica = pd.DataFrame(self._estrutura_estatistica)
         self.salva_dados_no_diretorio_alertador(df_estatistica, f'Estatistica_Tickes.csv')    
+
 
 objeto = Alertador()
