@@ -245,3 +245,23 @@ PETR3 --> Finalizou Processamento: 2023-07-12 11:55:57.615060
 PETR3 --> Tempo total de processamento: 0:00:33.024069
 --------------------------------------------------------------------------------
 PETR4 --> Inicializou Processamento: 2023-07-12 11:55:58.635024
+PETR4 --> Finalizou Processamento: 2023-07-12 11:56:36.075915
+PETR4 --> Tempo total de processamento: 0:00:37.440891
+--------------------------------------------------------------------------------
+PETZ3 --> Inicializou Processamento: 2023-07-12 11:56:36.968920
+PETZ3 --> Finalizou Processamento: 2023-07-12 11:56:41.834919
+PETZ3 --> Tempo total de processamento: 0:00:04.866999
+--------------------------------------------------------------------------------
+POSI3 --> Inicializou Processamento: 2023-07-12 11:56:42.965920
+POSI3 --> Finalizou Processamento: 2023-07-12 11:57:05.883770
+POSI3 --> Tempo total de processamento: 0:00:22.917850
+--------------------------------------------------------------------------------
+PRIO3 --> Inicializou Processamento: 2023-07-12 11:57:06.802479
+PRIO3 --> Finalizou Processamento: 2023-07-12 11:57:25.370251
+PRIO3 --> Tempo total de processamento: 0:00:18.567772
+--------------------------------------------------------------------------------
+QUAL3 --> Inicializou Processamento: 2023-07-12 11:57:26.441592
+QUAL3 --> Finalizou Processamento: 2023-07-12 11:57:42.948293
+QUAL3 --> Tempo total de processamento: 0:00:16.507701
+--------------------------------------------------------------------------------
+RADL3 --> Inicializou Processamento: 2023-07-12 11:57:43.852295
