@@ -388,7 +388,7 @@ class Alertador:
         """Cria um dataframe do dados estatísticos e 
         encaminha para salvar dados."""
         df_estatistica = pd.DataFrame(self._estrutura_estatistica)
-        self.salva_dados_no_diretorio_alertador(df_estatistica, f'Estatistica_Tickes.csv')    
+        self.salva_dados_no_diretorio_alertador(df_estatistica, f'_Estatistica_Tickers.csv')    
 
 
 objeto = Alertador()
