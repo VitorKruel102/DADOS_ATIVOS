@@ -157,11 +157,11 @@ class Alertador:
         """Salva na raiz do projeto o arquivo log-desempenho.txt responsável 
         por registrar o desempenho em locais desejados."""
         if reiniciar_arquivo:
-            if os.path.exists('log-desempenho.txt'):
-                os.remove('log-desempenho.txt')
+            if os.path.exists('log-desempenho-alertador.txt'):
+                os.remove('log-desempenho-alertador.txt')
 
-        if os.path.exists('log-desempenho.txt'):
-            with open('log-desempenho.txt', 'a', newline='', encoding='utf-8') as arquivo:
+        if os.path.exists('log-desempenho-alertador.txt'):
+            with open('log-desempenho-alertador.txt', 'a', newline='', encoding='utf-8') as arquivo:
                 writer = csv.writer(arquivo)
                 writer.writerow([registro])
             return
