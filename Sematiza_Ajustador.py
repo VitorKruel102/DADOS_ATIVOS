@@ -51,13 +51,13 @@ DIA_INICIO = None
 
 class Ajustador:
     def __init__(self) -> None:
+        self.salva_log_desempenho(reiniciar_arquivo=True)        
+
         if not DIA_INICIO:
             self.deletar_dados_antigos()
-        
+
         self._estrutura_para_dados_ajustados = self.inicia_estrutura_para_dados_ajustados()
         self.lista_dados_de_interesse = self.retorna_dados_de_interesse()
-
-        pass
 
     def deletar_dados_antigos(self) -> None:
         """."""
@@ -94,6 +94,19 @@ class Ajustador:
         print('ERRO NO PROCESSAMENTO:')
         print(mensagem)
         print('-' * 80)
+
+    def salva_log_desempenho(self, registro, reiniciar_arquivo=False) -> None:
+        """Salva na raiz do projeto o arquivo log-desempenho.txt responsável 
+        por registrar o desempenho em locais desejados."""
+        if reiniciar_arquivo:
+            if os.path.exists('log-desempenho-ajustador.txt'):
+                os.remove('log-desempenho-ajustador.txt')
+
+        if os.path.exists('log-desempenho-ajustador.txt'):
+            with open('log-desempenho-ajustador.txt', 'a', newline='', encoding='utf-8') as arquivo:
+                writer = csv.writer(arquivo)
+                writer.writerow([registro])
+            return
 
 
 objeto = Ajustador()
