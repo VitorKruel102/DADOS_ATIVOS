@@ -160,15 +160,10 @@ class Alertador:
             if os.path.exists('log-desempenho-alertador.txt'):
                 os.remove('log-desempenho-alertador.txt')
 
-        if os.path.exists('log-desempenho-alertador.txt'):
-            with open('log-desempenho-alertador.txt', 'a', newline='', encoding='utf-8') as arquivo:
-                writer = csv.writer(arquivo)
-                writer.writerow([registro])
-            return
-
-        with open('log-desempenho.txt', 'w', newline='', encoding='utf-8') as arquivo:
+        with open('log-desempenho-alertador.txt', 'a', newline='', encoding='utf-8') as arquivo:
             writer = csv.writer(arquivo)
             writer.writerow([registro])
+
 
     def retornar_feriados_integrais_da_b3(self) -> list:
         """Retorna dados do arquivo feriados-b3.json com todos os feriados integrais da b3."""
