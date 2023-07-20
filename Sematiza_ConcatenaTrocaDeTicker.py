@@ -20,7 +20,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-DIRETORIO_DADOS_INTRADAY = r'E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes'
+DIRETORIO_DADOS_INTRADAY = r'D:\DADOS_FINANCEIROS\Database_DadosParaAjuste'
 DIRETORIO_JSON = os.path.join(BASE_DIR, 'ativos-mudaram-ticker.json')
 
 class ConcatenaTrocaAtivos:
@@ -28,7 +28,7 @@ class ConcatenaTrocaAtivos:
         self.ativos_de_interesse = self.retorna_ativos_que_mudaram_de_ticker()
 
         for ticker_antigo, ticker_novo in self.ativos_de_interesse.items():
-
+            print(ticker_antigo)
             if not self.existe_ativo_no_diretorio_dados_intraday(ticker_antigo):
                 continue
 

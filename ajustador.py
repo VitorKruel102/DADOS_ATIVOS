@@ -3,10 +3,12 @@ import pandas as pd
 from pprint import pprint
 from time import sleep
 
+from Sematiza_ConcatenaTrocaDeTicker import ConcatenaTrocaAtivos
+
 DIRETORIO_DIARIO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'  # Dados com Ajuste e com Split
 DIRETORIO_DIARIO_SPLIT = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_SPLIT'  # Dados com Ajuste e com Split
-DIRETORIO_SEM_AJUSTE_MINUTO = r'E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes' #E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes
-DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE = r'E:\DADOS_FINANCEIROS\DADOS\Database_DadosParaAjuste'
+DIRETORIO_SEM_AJUSTE_MINUTO = r'D:\DADOS_FINANCEIROS\Database_Minuto' #E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes
+DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_DadosParaAjuste'
 DIRETORIO_SEM_AJUSTE_MINUTO_CO41 = r'D:\DADOS_FINANCEIROS\Database_CO41'
 DIRETORIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_MinutoAjustado'
 
@@ -146,9 +148,6 @@ def ajustador():
             nome_ticker = arquivo.split('_')[0]
             ATIVOS_INTERESSE.append(nome_ticker)
 
-    print(len(ATIVOS_INTERESSE))
-    print(ATIVOS_INTERESSE)
-    sleep(10000000)
     for ativo in ATIVOS_INTERESSE:
         ...
         arquivo_minuto = os.path.join(DIRETORIO_SEM_AJUSTE_MINUTO, f'{ativo}_BMF_I.csv')
@@ -264,4 +263,5 @@ if __name__ == '__main__':
     remove_folders(DIRETORIO_AJUSTADO)
     # remove_folders(DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE)
     # copia_dados_para_pasta_dados_de_interesse_para_ajuste()
+    ConcatenaTrocaAtivos()
     ajustador()
