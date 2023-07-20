@@ -379,7 +379,6 @@ def intraday():
             if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
                 os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
             
-            print(DADOS[ticker])
             with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
                 spanrows = csv.writer(csvfile, delimiter=',')
                 spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
