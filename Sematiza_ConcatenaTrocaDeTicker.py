@@ -27,13 +27,25 @@ class ConcatenaTrocaAtivos:
     def __init__(self) -> None:
         self.ativos_de_interesse = self.retorna_ativos_que_mudaram_de_ticker()
 
-        for ativo in self.ativos_de_interesse.keys():
+        for ticker_antigo, ticker_novo in self.ativos_de_interesse.items():
 
-            if self.existe_ativo_no_diretorio_dados_intraday(ativo):
-                print(ativo)
-            else:
-                print('Not File')
+            if not self.existe_ativo_no_diretorio_dados_intraday(ticker_antigo):
+                continue
 
+            df_ticker_antigo = pd.read_csv(self.retorna_path_do_ticker(ticker_antigo), sep=';') 
+            df_ticker_novo = pd.read_csv(self.retorna_path_do_ticker(ticker_novo), sep=';') 
+
+            df_ticker_novo_filtrado = df_ticker_novo[df_ticker_novo['<date>'] > df_ticker_antigo['<date>'].iloc[-1]]
+        
+            df_concatenado = pd.concat([df_ticker_antigo, df_ticker_novo_filtrado])
+            df_concatenado['<ticker>'] = ticker_novo
+
+            os.remove(self.retorna_path_do_ticker(ticker_antigo))
+            df_concatenado.to_csv(os.path.join(DIRETORIO_DADOS_INTRADAY, f'{ticker_antigo}_BMF_I.csv'), sep=';', index=False)
+            
+    def retorna_path_do_ticker(self, ativo):
+        """."""
+        return os.path.join(DIRETORIO_DADOS_INTRADAY, f'{ativo}_BMF_I.csv')
     
     def existe_ativo_no_diretorio_dados_intraday(self, ativo):
         """Verifica se existe ativos no diretorio informado do intraday."""
