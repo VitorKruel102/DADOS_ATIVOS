@@ -20,7 +20,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-DIRETORIO_DADOS_INTRADAY = r'D:\DADOS_FINANCEIROS\Database_DadosParaAjuste'
+DIRETORIO_DADOS_PARA_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_DadosParaAjuste'
 DIRETORIO_JSON = os.path.join(BASE_DIR, 'ativos-mudaram-ticker.json')
 
 class ConcatenaTrocaAtivos:
@@ -29,7 +29,7 @@ class ConcatenaTrocaAtivos:
 
         for ticker_antigo, ticker_novo in self.ativos_de_interesse.items():
             print(ticker_antigo)
-            if not self.existe_ativo_no_diretorio_dados_intraday(ticker_antigo):
+            if not self.existe_ativo_no_diretorio_dados_para_ajuste(ticker_antigo):
                 continue
 
             df_ticker_antigo = pd.read_csv(self.retorna_path_do_ticker(ticker_antigo), sep=';') 
@@ -41,15 +41,15 @@ class ConcatenaTrocaAtivos:
             df_concatenado['<ticker>'] = ticker_novo
 
             os.remove(self.retorna_path_do_ticker(ticker_antigo))
-            df_concatenado.to_csv(os.path.join(DIRETORIO_DADOS_INTRADAY, f'{ticker_antigo}_BMF_I.csv'), sep=';', index=False)
+            df_concatenado.to_csv(os.path.join(DIRETORIO_DADOS_PARA_AJUSTE, f'{ticker_novo}_BMF_I.csv'), sep=';', index=False)
             
     def retorna_path_do_ticker(self, ativo):
         """."""
-        return os.path.join(DIRETORIO_DADOS_INTRADAY, f'{ativo}_BMF_I.csv')
+        return os.path.join(DIRETORIO_DADOS_PARA_AJUSTE, f'{ativo}_BMF_I.csv')
     
-    def existe_ativo_no_diretorio_dados_intraday(self, ativo):
+    def existe_ativo_no_diretorio_dados_para_ajuste(self, ativo):
         """Verifica se existe ativos no diretorio informado do intraday."""
-        path_ativo = os.path.join(DIRETORIO_DADOS_INTRADAY, f'{ativo}_BMF_I.csv')
+        path_ativo = os.path.join(DIRETORIO_DADOS_PARA_AJUSTE, f'{ativo}_BMF_I.csv')
         if os.path.exists(path_ativo):
             return True
         return False
@@ -61,5 +61,3 @@ class ConcatenaTrocaAtivos:
         with open(DIRETORIO_JSON, 'r') as arquivo:
             return json.load(arquivo)
 
-
-ConcatenaTrocaAtivos()

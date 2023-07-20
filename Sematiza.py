@@ -4,109 +4,10 @@ import pandas as pd
 from pandas_market_calendars import get_calendar
 from time import sleep
 
-"""ATIVOS = [
-    'BBSE3',   'ENGI11',  'EGIE3',   'ITUB4',   'ITSA4',   'BRFS3',   'PRIO3',   'LOGG3',   'BEEF3',   'GGBR4',   'OIBR4',   'TELB3',   'CCRO3',
-    'RAIL3',   'MRVE3',   'CGAS5',   'LIGT3',   'BPAC11',  'BBAS3',   'PMAM3',   'STBP3',   'UGPA3',   'WHRL3',   'SEER3',   'GOAU4',   'TGMA3',
-    'VBBR3',   'YDUQ3',   'ASAI3',   'DXCO3',   'BRKM5',   'GEPA4',   'TOTS3',   'WEGE3',   'BBDC3',   'TUPY3',   'TIMS3',   'TRPL4',   'PCAR3',
-    'RENT3',   'IRBR3',   'GGBR3',   'B3SA3',   'GOLL4',   'VIVT3',   'ELET3',   'ELET6',   'EMBR3',   'SUZB3',   'PETR4',   'CMIG4',   'OIBR3',
-    'CSNA3',   'POMO4',   'CYRE3',   'VALE3',   'RSID3',   'EMAE4',   'ALPA4',   'AMER3',   'CVCB3',   'VIIA3',   'FLRY3',   'KLBN11',  'NEOE3',
-    'QUAL3',   'CPLE6',   'ECOR3',   'AURE3',   'ENEV3',   'USIM3',   'HYPE3',   'CIEL3',   'ENBR3',   'TAEE11',  'SYNE3',   'RADL3',   'MRFG3',
-    'UNIP6',   'ALSO3',   'MYPK3',   'SBSP3',   'SANB4',   'INEP4',   'COGN3',   'MELK3',   'EVEN3',   'RDOR3',   'TELB4',   'VALE4',   'CTNM4',
-    'EQTL3',   'BRAP4',   'HAPV3',   'ABEV3',   'MGLU3',   'PRIO3',   'CRFB3',   'NTCO3',   'CPFE3',   'CMIG3',   'SAPR11',  'MTSA3',   'LIPR3',
-    'VSTE3',   'JBSS3',   'GFSA3',   'KLBN4',   'USIM5',   'CSAN3',   'BEES3',   'AZUL4',   'TCSA3',   'MULT3',   'DASA3',   'LREN3',
-]"""
-ATIVOS = [
-'MRVE3',
-'GOAU4',
-'COGN3',
-'QUAL3',
-'SUZB3',
-'SANB11',
-'B3SA3',
-'MRFG3',
-'KLBN11',
-'UGPA3',
-'CSNA3',
-'PETR3',
-'TIMS3',
-'EZTC3',
-'ELET6',
-'HYPE3',
-'AMER3',
-'CCRO3',
-'BRDT3',
-'SBSP3',
-'EQTL3',
-'BPAN4',
-'ALSO3',
-'ASAI3',
-'LWSA3',
-'CMIN3',
-'ABEV3',
-'TAEE11',
-'VIVT3',
-'ITSA4',
-'BRKM5',
-'EGIE3',
-'ENGI11',
-'PCAR3',
-'USIM5',
-'ECOR3',
-'ELET3',
-'IRBR3',
-'DXCO3',
-'MGLU3',
-'LREN3',
-'JHSF3',
-'BBDC3',
-'VALE3',
-'FLRY3',
-'IGTI11',
-'BEEF3',
-'PETZ3',
-'BRAP4',
-'CPLE6',
-'VBBR3',
-'NTCO3',
-'CPFE3',
-'JBSS3',
-'CIEL3',
-'BRFS3',
-'RADL3',
-'AZUL4',
-'RENT3',
-'SOMA3',
-'VIIA3',
-'RAIL3',
-'PRIO3',
-'ENBR3',
-'WEGE3',
-'BPAC11',
-'PETR4',
-'ITUB4',
-'MULT3',
-'BBDC4',
-'ALPA4',
-'POSI3',
-'CVCB3',
-'CRFB3',
-'CMIG4',
-'BBSE3',
-'CYRE3',
-'GOLL4',
-'BBAS3',
-'SLCE3',
-'ENEV3',
-'TOTS3',
-'RDOR3',
-'GGBR4',
-'EMBR3',
-'CASH3',
-'HAPV3',
-'CSAN3',
-'RRRP3',
-'YDUQ3',
-]
+DIRETORIO_TEMPOS_GRAFICOS = r'D:\DADOS_FINANCEIROS\Database_Sematiza_TemposGraficos'
+DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE = r'D:\DADOS_FINANCEIROS\Database_DadosParaAjuste'
+PATH_SEMATIZA = r'D:\DADOS_FINANCEIROS\Database_Sematiza'
+
 
 FERIADOS_B3 = [
     '2018-01-01',  '2018-01-25',  '2018-02-12',  '2018-02-13',
@@ -141,6 +42,12 @@ TEMPOS_INTRADAY = [1,  5, 10, 15, 20, 30,60] #,1,  5, 10, 15, 20, 30, 60
 TEMPOS_DIARIOS = ['DIARIO'] # SAF = Sem After 'DIARIO'
 HORA_ABERTURA = 1030 # HHMM
 
+ATIVOS = []
+for _, _, arquivos in os.walk(DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE):
+    for arquivo in arquivos:
+        nome_ticker = arquivo.split('_')[0]
+        ATIVOS.append(nome_ticker)   
+
 DADOS = {
     acoes: {
         tempo: {
@@ -154,8 +61,7 @@ DADOS = {
     for acoes in ATIVOS
 }
 
-DIRETORIO_TEMPOS_GRAFICOS = r'D:\DADOS_FINANCEIROS\Database_Sematiza_TemposGraficos'
-PATH_SEMATIZA = r'D:\DADOS_FINANCEIROS\Database_Sematiza'
+
 
 
 def close_update(new_close):
@@ -210,8 +116,8 @@ def dias_uteis_b3(start_date, end_date, tipo_calendario='B3') -> list():
 
 def sematiza_diario():
     """."""
-    from datetime import datetime
-    
+    from datetime import datetime 
+
     HORA_ABERTURA = 1030
     for tempo in TEMPOS_DIARIOS:
         nome_pasta = tempo
@@ -315,7 +221,8 @@ def sematiza_diario():
 def intraday():
     """."""
     from datetime import datetime
-    
+
+
     HORA_ABERTURA = 1030
     for tempo in TEMPOS_INTRADAY:
         if len(str(tempo)) == 1:
@@ -330,7 +237,7 @@ def intraday():
             os.chdir(DIRETORIO_TEMPOS_GRAFICOS)
             nome_arquivo = os.path.join(DIRETORIO_TEMPOS_GRAFICOS, nome_pasta, f'{ticker}_{tempo_grafico_interesse}.csv')
             df_minuto = pd.read_csv(nome_arquivo, sep=';')
-            df_minuto['<time>'] = df_minuto['<time>'] // 100
+            df_minuto['<time>'] = df_minuto['<time>']
 
             df_minuto['<date>'] = pd.to_datetime(df_minuto['<date>'], format='%Y%m%d').dt.strftime('%Y-%m-%d')
 
@@ -341,6 +248,7 @@ def intraday():
                 primeiro_dia_interesse, 
                 ultimo_dia_interesse
             )
+            
             
             for dia in dias_uteis:
                 df_minuto_filtrado = df_minuto[df_minuto['<date>'] == dia]
@@ -470,7 +378,8 @@ def intraday():
         for ticker in ATIVOS:
             if not os.path.exists(os.path.join(PATH_SEMATIZA, nome_pasta)):
                 os.mkdir(os.path.join(PATH_SEMATIZA, nome_pasta))
-
+            
+            print(DADOS[ticker])
             with open(os.path.join(PATH_SEMATIZA, nome_pasta, f'{ticker}_{tempo}.csv'), 'w', newline='') as csvfile:
                 spanrows = csv.writer(csvfile, delimiter=',')
                 spanrows.writerow(['#Candles:' + str(DADOS[ticker][tempo]['DADOS_INTERESSE'][0])])
@@ -494,5 +403,5 @@ def remove_folders(directory):
 
 if __name__ == '__main__':
     remove_folders(PATH_SEMATIZA)
-    sematiza_diario()
+    # sematiza_diario()
     intraday()
