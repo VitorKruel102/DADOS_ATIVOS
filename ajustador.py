@@ -1,136 +1,17 @@
 import os 
 import pandas as pd
 from pprint import pprint
-
+from time import sleep
 
 DIRETORIO_DIARIO = r'D:\DADOS_FINANCEIROS\Dadabase_Profit_NA_split'  # Dados com Ajuste e com Split
 DIRETORIO_DIARIO_SPLIT = r'D:\DADOS_FINANCEIROS\Database_ProfitDiario_SPLIT'  # Dados com Ajuste e com Split
-DIRETORIO_SEM_AJUSTE_MINUTO = r'D:\DADOS_FINANCEIROS\Database_Minuto'
+DIRETORIO_SEM_AJUSTE_MINUTO = r'E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes' #E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes
+DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE = r'E:\DADOS_FINANCEIROS\DADOS\Database_DadosParaAjuste'
 DIRETORIO_SEM_AJUSTE_MINUTO_CO41 = r'D:\DADOS_FINANCEIROS\Database_CO41'
 DIRETORIO_AJUSTADO = r'D:\DADOS_FINANCEIROS\Database_MinutoAjustado'
 
 ATIVOS_INTERESSE = [
-    'PETR4',  'ELET6',  'BBDC4',  'CMIG4',  'ELET3',  'EMBR3',  'PETR3',  'USIM5',
-    'CPLE6',  'INEP4',  'ITSA4',  'CSNA3',  'GEPA4',  'CMIG3',  'MGLU3',  'KLBN4',
-    'BBAS3',  'SBSP3',  'BRAP4',  'CGAS5',  'BRKM5',  'VALE3',  'GOAU4',  'CCRO3',
-    'LIGT3',  'CSAN3',  'GOLL4',  'CYRE3',  'CPFE3',  'LREN3',  'GFSA3',  'JBSS3',
-    'USIM3',  'RSID3',  'ITUB4',  'BRFS3',  'MRVE3',  'PDGR3',  'CIEL3',  'SANB11',
-    'MRFG3',  'HYPE3',  'UGPA3',  'RENT3',  'DASA3',  'OIBR4',  'OIBR3',  'ENBR3',
-    'BRPR3',  'BBDC3',  'ABEV3',  'BBSE3',  'QUAL3',  'ECOR3',  'EVEN3',  'KLBN11',
-    'POMO4',  'RADL3',  'EQTL3',  'WEGE3',  'TAEE11', 'FLRY3',  'SUZB3',  'TRPL4',
-    'SAPR11', 'CVCB3',  'LOGG3',  'IRBR3',  'AZUL4',  'BPAC11', 'HAPV3',  'TOTS3',
-    'CRFB3',  'ENGI11', 'PCAR3',  'BEEF3',  'PRIO3',  'EZTC3',  'RDOR3',  'ENEV3',
-    'VIVT3',  'ASAI3',  'ALSO3',  'LWSA3',  'BPAN4',  'PETZ3',  'CASH3',  'CMIN3',
-    'SOMA3',  'POSI3',  'RRRP3',  'SLCE3',  'GGBR4',  'EGIE3',  'NTCO3',  'B3SA3',
-    'AMER3',  'SYNE3',  'DXCO3',  'TIMS3',  'COGN3',  'YDUQ3',  'RAIL3',  'VIIA3',
-    'VBBR3',  'ALPA4',  'JHSF3',  'BOVA11',
-]
-ATIVOS_INTERESSE = [
-    'MRVE3',
-    'GOAU4',
-    'COGN3',
-    'QUAL3',
-    'SUZB3',
-    'SANB11',
-    'B3SA3',
-    'MRFG3',
-    'KLBN11',
-    'UGPA3',
-    'CSNA3',
-    'PETR3',
-    'TIMS3',
-    'EZTC3',
-    'ELET6',
-    'HYPE3',
-    'AMER3',
-    'CCRO3',
-    'BRDT3',
-    #'LCAM3',
-    'SBSP3',
-    'EQTL3',
-    'BPAN4',
-    'ALSO3',
-    'ASAI3',
-    'LWSA3',
-    'CMIN3',
-    'ABEV3',
-    'TAEE11',
-    'VIVT3',
-    'ITSA4',
-    'BRKM5',
-    'EGIE3',
-    #'DTEX3',
-    'ENGI11',
-    #'BIDI11',
-    'PCAR3',
-    'USIM5',
-    'ECOR3',
-    'ELET3',
-    'IRBR3',
-    'DXCO3',
-    'MGLU3',
-    'LREN3',
-    'JHSF3',
-    'BBDC3',
-    'VALE3',
-    'FLRY3',
-    'IGTI11',
-    #'IGTA3',
-    'BEEF3',
-    'PETZ3',
-    #'BTOW3',
-    'BRAP4',
-    'CPLE6',
-    'VBBR3',
-    'NTCO3',
-    'CPFE3',
-    #'HGTX3',
-    #'YDUQ3',
-    'JBSS3',
-    #'SULA11',
-    'CIEL3',
-    'BRFS3',
-    'RADL3',
-    'AZUL4',
-    #'BIDI4',
-    #'BRML3',
-    'RENT3',
-    'SOMA3',
-    'VIIA3',
-    #'LAME4',
-    'RAIL3',
-    'PRIO3',
-    'ENBR3',
-    'WEGE3',
-    'BPAC11',
-    'PETR4',
-    'ITUB4',
-    'MULT3',
-    'BBDC4',
-    'ALPA4',
-    'POSI3',
-    'CVCB3',
-    'CRFB3',
-    #'VVAR3',
-    'CMIG4',
-    'BBSE3',
-    'CYRE3',
-    'GOLL4',
-    'BBAS3',
-    'SLCE3',
-    'ENEV3',
-    'TOTS3',
-    'RDOR3',
-    #'GNDI3',
-    'GGBR4',
-    'EMBR3',
-    'CASH3',
-    'HAPV3',
-    'CSAN3',
-    'RRRP3',
-]
-
-ATIVOS_INTERESSE = [
+    'IGTA3',
     'MRVE3',
     'GOAU4',
     'COGN3',
@@ -176,6 +57,7 @@ ATIVOS_INTERESSE = [
     'BBDC3',
     'VALE3',
     'FLRY3',
+    'LAME4',
     'IGTI11',
     'BEEF3',
     'PETZ3',
@@ -244,9 +126,29 @@ ERROS = {
     'Data': []
 }
 
+def copia_dados_para_pasta_dados_de_interesse_para_ajuste():
+    """."""
+    lista_de_ativos =  [f'{x}_BMF_I.csv' for x in ATIVOS_INTERESSE]
+
+    for path, diretorios, arquivos in os.walk(DIRETORIO_SEM_AJUSTE_MINUTO):
+        for arquivo in lista_de_ativos:
+            if arquivo in lista_de_ativos:
+                
+                df = pd.read_csv(os.path.join(path, arquivo), sep=';')
+                df.to_csv(os.path.join(DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE, arquivo), sep=';', index=False)   
+
 
 def ajustador():
     """."""
+    ATIVOS_INTERESSE = []
+    for _, _, arquivos in os.walk(DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE):
+        for arquivo in arquivos:
+            nome_ticker = arquivo.split('_')[0]
+            ATIVOS_INTERESSE.append(nome_ticker)
+
+    print(len(ATIVOS_INTERESSE))
+    print(ATIVOS_INTERESSE)
+    sleep(10000000)
     for ativo in ATIVOS_INTERESSE:
         ...
         arquivo_minuto = os.path.join(DIRETORIO_SEM_AJUSTE_MINUTO, f'{ativo}_BMF_I.csv')
@@ -360,4 +262,6 @@ def remove_folders(directory):
 
 if __name__ == '__main__':
     remove_folders(DIRETORIO_AJUSTADO)
+    # remove_folders(DIRETORIO_PRICIPAIS_TICKER_PARA_AJUSTE)
+    # copia_dados_para_pasta_dados_de_interesse_para_ajuste()
     ajustador()
