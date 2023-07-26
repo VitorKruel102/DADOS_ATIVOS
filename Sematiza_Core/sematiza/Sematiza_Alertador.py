@@ -3,7 +3,7 @@ Criado: 10/07/2023 17:43
 
 Autor: Vitor Kruel.
 """
-from Sematiza_Core.utils import log
+from DADOS_ATIVOS.Sematiza_Core.utils.log_sematiza import LogPrintMixin
 
 import csv
 import os
