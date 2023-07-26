@@ -11,14 +11,8 @@ pd.options.mode.chained_assignment = None
 
 from pandas_market_calendars import get_calendar
 from datetime import datetime
-
-BASE_DIR = os.getcwd()
-
-DIRETORIO_DADOS_INTRADAY = r'E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes'
-DIRETORIO_DADOS_DIARIOS_AJUSTADOS = r'E:\DADOS_FINANCEIROS\Profit\Database_NAS'
-DIRETORIO_DADOS_DIARIOS_SEM_AJUSTE = r'E:\DADOS_FINANCEIROS\Profit\Database_ProfitDiario'
-DIRERORIO_PARA_SALVAR_DADOS_ALERTADOR = r'E:\DADOS_FINANCEIROS\DADOS\Database_Alertador' 
-DIRETORIO_DADOS_JSON_DOS_FERIADOS_B3 = os.path.join(BASE_DIR, 'feriados-b3.json')
+from config import settings as _settings
+from ..utils import log
 
 PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO = 20211013
 
@@ -45,14 +39,14 @@ class Alertador:
 
     def deletar_dados_antigos(self):
         """."""
-        for path, _, arquivos in os.walk(DIRERORIO_PARA_SALVAR_DADOS_ALERTADOR):
+        for path, _, arquivos in os.walk(_settings.DIRERORIO_ALERTADOR):
             for arquivo in arquivos:
                 os.remove(os.path.join(path, arquivo))
 
     def enviar_dados_intraday(self) -> str:
         """Enviar dados do Intraday para a função gerenciar 
         comparações para validação dos dados."""
-        for path, _, arquivos in os.walk(DIRETORIO_DADOS_INTRADAY):
+        for path, _, arquivos in os.walk(_settings.DIRETORIO_PRINCIPAIS_ACOES):
             for arquivo in arquivos:
                 path_arquivo = os.path.join(path, arquivo)
 
@@ -159,7 +153,7 @@ class Alertador:
     def salva_log_desempenho(self, registro, reiniciar_arquivo=False) -> None:
         """Salva na raiz do projeto o arquivo log-desempenho.txt responsável 
         por registrar o desempenho em locais desejados."""
-        path_log = os.path.join(BASE_DIR, 'log-desempenho-alertador.txt')
+        path_log = os.path.join(_settings.DIRETORIO_LOG)
         if reiniciar_arquivo:
             if os.path.exists(path_log):
                 os.remove(path_log)
@@ -170,7 +164,7 @@ class Alertador:
 
     def retornar_feriados_integrais_da_b3(self) -> list:
         """Retorna dados do arquivo feriados-b3.json com todos os feriados integrais da b3."""
-        with open(DIRETORIO_DADOS_JSON_DOS_FERIADOS_B3, 'r') as arquivo:
+        with open(_settings.PATH_ARQUIVO_FERIADOS, 'r') as arquivo:
             return json.load(arquivo)["feriado-dia-inteiro"]
 
     def eh_dia_util(self, dia, feriados_b3) -> bool:
@@ -187,7 +181,7 @@ class Alertador:
         
     def retorna_dataframe_ajustado(self, ticker, separador=';'):
         """."""
-        path_diario = os.path.join(DIRETORIO_DADOS_DIARIOS_AJUSTADOS, f'{ticker}_DIARIO_NAS.csv')
+        path_diario = os.path.join(_settings.DIRETORIO_PROFIT_AJUSTADO_COM_SPLIT, f'{ticker}_DIARIO_NAS.csv')
         
         df_diario = pd.read_csv(path_diario, sep=separador)
         df_diario['Data'] = df_diario['Data'].astype(int)
@@ -195,7 +189,7 @@ class Alertador:
 
     def retorna_dataframe_nao_ajustado(self, ticker, separador=';'):
         """."""
-        path_diario = os.path.join(DIRETORIO_DADOS_DIARIOS_SEM_AJUSTE, f'{ticker}_DIARIO.csv')
+        path_diario = os.path.join(_settings.DIRETORIO_PROFIT_SEM_AJUSTE, f'{ticker}_DIARIO.csv')
 
         df_diario = pd.read_csv(path_diario, sep=separador) 
         df_diario['Data'] = pd.to_datetime(df_diario['Data'], format='%d/%m/%Y')
@@ -366,14 +360,13 @@ class Alertador:
         except ZeroDivisionError:
             return 100.00
 
-
     def formata_data_inteiro_para_datetime(self, dataframe, nome_da_coluna_data='<date>'):
         dataframe[nome_da_coluna_data] = dataframe[nome_da_coluna_data].astype(str)
         dataframe[nome_da_coluna_data] = pd.to_datetime(dataframe[nome_da_coluna_data]) 
 
     def salva_dados_no_diretorio_alertador(self, dataframe, nome_arquivo):
         """Salva os dados no diretorio Database_Alertador."""
-        path_ativo = os.path.join(DIRERORIO_PARA_SALVAR_DADOS_ALERTADOR, nome_arquivo)
+        path_ativo = os.path.join(_settings.DIRERORIO_ALERTADOR, nome_arquivo)
         dataframe.to_csv(path_ativo, encoding='utf-8', sep=';', index=False)
 
     def resetar_estrututa(self, estrutua):
