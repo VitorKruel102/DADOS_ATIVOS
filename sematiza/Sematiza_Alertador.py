@@ -12,17 +12,20 @@ pd.options.mode.chained_assignment = None
 from pandas_market_calendars import get_calendar
 from datetime import datetime
 
+BASE_DIR = os.getcwd()
 
 DIRETORIO_DADOS_INTRADAY = r'E:\DADOS_FINANCEIROS\DADOS\Database_PrincipaisAcoes'
 DIRETORIO_DADOS_DIARIOS_AJUSTADOS = r'E:\DADOS_FINANCEIROS\Profit\Database_NAS'
 DIRETORIO_DADOS_DIARIOS_SEM_AJUSTE = r'E:\DADOS_FINANCEIROS\Profit\Database_ProfitDiario'
 DIRERORIO_PARA_SALVAR_DADOS_ALERTADOR = r'E:\DADOS_FINANCEIROS\DADOS\Database_Alertador' 
-DIRETORIO_DADOS_JSON_DOS_FERIADOS_B3 = r'C:\Users\vkrue\OneDrive\Área de Trabalho\GitHub\DADOS_ATIVOS\feriados-b3.json'
+DIRETORIO_DADOS_JSON_DOS_FERIADOS_B3 = os.path.join(BASE_DIR, 'feriados-b3.json')
 
 PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO = 20211013
 
 
 class Alertador:
+
+
     def __init__(self) -> None:
         self.deletar_dados_antigos()
 
@@ -156,14 +159,14 @@ class Alertador:
     def salva_log_desempenho(self, registro, reiniciar_arquivo=False) -> None:
         """Salva na raiz do projeto o arquivo log-desempenho.txt responsável 
         por registrar o desempenho em locais desejados."""
+        path_log = os.path.join(BASE_DIR, 'log-desempenho-alertador.txt')
         if reiniciar_arquivo:
-            if os.path.exists('log-desempenho-alertador.txt'):
-                os.remove('log-desempenho-alertador.txt')
+            if os.path.exists(path_log):
+                os.remove(path_log)
 
-        with open('log-desempenho-alertador.txt', 'a', newline='', encoding='utf-8') as arquivo:
+        with open(path_log, 'a', newline='', encoding='utf-8') as arquivo:
             writer = csv.writer(arquivo)
             writer.writerow([registro])
-
 
     def retornar_feriados_integrais_da_b3(self) -> list:
         """Retorna dados do arquivo feriados-b3.json com todos os feriados integrais da b3."""
