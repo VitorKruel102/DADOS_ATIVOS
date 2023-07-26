@@ -3,6 +3,8 @@ Criado: 10/07/2023 17:43
 
 Autor: Vitor Kruel.
 """
+from Sematiza_Core.utils import log
+
 import csv
 import os
 import json
@@ -12,7 +14,7 @@ pd.options.mode.chained_assignment = None
 from pandas_market_calendars import get_calendar
 from datetime import datetime
 from config import settings as _settings
-from ..utils import log
+
 
 PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO = 20211013
 
