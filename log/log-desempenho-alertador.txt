@@ -1,0 +1,190 @@
+--------------------------------------------------------------------------------
+ABEV3 --> Inicializou Processamento: 2023-07-27 11:20:34.945159
+ABEV3 --> Finalizou Processamento: 2023-07-27 11:21:32.058202
+ABEV3 --> Tempo total de processamento: 0:00:57.113043
+--------------------------------------------------------------------------------
+ALPA4 --> Inicializou Processamento: 2023-07-27 11:21:35.549202
+ALPA4 --> Finalizou Processamento: 2023-07-27 11:22:41.373200
+ALPA4 --> Tempo total de processamento: 0:01:05.824998
+--------------------------------------------------------------------------------
+ALSO3 --> Inicializou Processamento: 2023-07-27 11:22:44.781201
+ALSO3 --> Finalizou Processamento: 2023-07-27 11:23:21.085201
+ALSO3 --> Tempo total de processamento: 0:00:36.304000
+--------------------------------------------------------------------------------
+AMER3 --> Inicializou Processamento: 2023-07-27 11:23:22.901200
+AMER3 --> Finalizou Processamento: 2023-07-27 11:24:13.079202
+AMER3 --> Tempo total de processamento: 0:00:50.179002
+--------------------------------------------------------------------------------
+ASAI3 --> Inicializou Processamento: 2023-07-27 11:24:14.817197
+ASAI3 --> Finalizou Processamento: 2023-07-27 11:24:24.791607
+ASAI3 --> Tempo total de processamento: 0:00:09.974410
+--------------------------------------------------------------------------------
+AZUL4 --> Inicializou Processamento: 2023-07-27 11:24:26.413021
+AZUL4 --> Finalizou Processamento: 2023-07-27 11:24:44.613972
+AZUL4 --> Tempo total de processamento: 0:00:18.200951
+--------------------------------------------------------------------------------
+B3SA3 --> Inicializou Processamento: 2023-07-27 11:24:46.171839
+B3SA3 --> Finalizou Processamento: 2023-07-27 11:25:23.358647
+B3SA3 --> Tempo total de processamento: 0:00:37.187806
+--------------------------------------------------------------------------------
+BBAS3 --> Inicializou Processamento: 2023-07-27 11:25:26.065680
+BBAS3 --> Finalizou Processamento: 2023-07-27 11:26:49.403528
+BBAS3 --> Tempo total de processamento: 0:01:23.339358
+--------------------------------------------------------------------------------
+BBDC3 --> Inicializou Processamento: 2023-07-27 11:26:53.318423
+BBDC3 --> Finalizou Processamento: 2023-07-27 11:28:17.149736
+BBDC3 --> Tempo total de processamento: 0:01:23.837326
+--------------------------------------------------------------------------------
+BBDC4 --> Inicializou Processamento: 2023-07-27 11:28:20.108097
+BBDC4 --> Finalizou Processamento: 2023-07-27 11:29:10.535680
+BBDC4 --> Tempo total de processamento: 0:00:50.427583
+--------------------------------------------------------------------------------
+BBSE3 --> Inicializou Processamento: 2023-07-27 11:29:11.951580
+BBSE3 --> Finalizou Processamento: 2023-07-27 11:29:29.703893
+BBSE3 --> Tempo total de processamento: 0:00:17.753313
+--------------------------------------------------------------------------------
+BEEF3 --> Inicializou Processamento: 2023-07-27 11:29:31.137822
+BEEF3 --> Finalizou Processamento: 2023-07-27 11:30:04.705135
+BEEF3 --> Tempo total de processamento: 0:00:33.570875
+--------------------------------------------------------------------------------
+BPAC11 --> Inicializou Processamento: 2023-07-27 11:30:07.137935
+BPAC11 --> Finalizou Processamento: 2023-07-27 11:30:34.949598
+BPAC11 --> Tempo total de processamento: 0:00:27.816662
+--------------------------------------------------------------------------------
+BPAN4 --> Inicializou Processamento: 2023-07-27 11:30:36.484388
+BPAN4 --> Finalizou Processamento: 2023-07-27 11:31:04.218945
+BPAN4 --> Tempo total de processamento: 0:00:27.735569
+--------------------------------------------------------------------------------
+BRAP4 --> Inicializou Processamento: 2023-07-27 11:31:05.470936
+BRAP4 --> Finalizou Processamento: 2023-07-27 11:31:38.483778
+BRAP4 --> Tempo total de processamento: 0:00:33.013844
+--------------------------------------------------------------------------------
+BRFS3 --> Inicializou Processamento: 2023-07-27 11:31:39.707245
+BRFS3 --> Finalizou Processamento: 2023-07-27 11:32:18.999796
+BRFS3 --> Tempo total de processamento: 0:00:39.292551
+--------------------------------------------------------------------------------
+BRKM5 --> Inicializou Processamento: 2023-07-27 11:32:19.931524
+BRKM5 --> Finalizou Processamento: 2023-07-27 11:32:55.829193
+BRKM5 --> Tempo total de processamento: 0:00:35.898630
+--------------------------------------------------------------------------------
+CASH3 --> Inicializou Processamento: 2023-07-27 11:32:56.842828
+CASH3 --> Finalizou Processamento: 2023-07-27 11:33:02.768239
+CASH3 --> Tempo total de processamento: 0:00:05.925411
+--------------------------------------------------------------------------------
+CCRO3 --> Inicializou Processamento: 2023-07-27 11:33:03.948218
+CCRO3 --> Finalizou Processamento: 2023-07-27 11:33:30.702487
+CCRO3 --> Tempo total de processamento: 0:00:26.755269
+--------------------------------------------------------------------------------
+CIEL3 --> Inicializou Processamento: 2023-07-27 11:33:32.646485
+CIEL3 --> Finalizou Processamento: 2023-07-27 11:34:10.617486
+CIEL3 --> Tempo total de processamento: 0:00:37.973001
+--------------------------------------------------------------------------------
+CMIG4 --> Inicializou Processamento: 2023-07-27 11:34:12.832483
+CMIG4 --> Finalizou Processamento: 2023-07-27 11:35:19.776485
+CMIG4 --> Tempo total de processamento: 0:01:06.945005
+--------------------------------------------------------------------------------
+CMIN3 --> Inicializou Processamento: 2023-07-27 11:35:22.464485
+CMIN3 --> Finalizou Processamento: 2023-07-27 11:35:31.719485
+CMIN3 --> Tempo total de processamento: 0:00:09.255999
+--------------------------------------------------------------------------------
+COGN3 --> Inicializou Processamento: 2023-07-27 11:35:33.576483
+COGN3 --> Finalizou Processamento: 2023-07-27 11:36:15.650483
+COGN3 --> Tempo total de processamento: 0:00:42.075001
+--------------------------------------------------------------------------------
+CPFE3 --> Inicializou Processamento: 2023-07-27 11:36:17.693484
+CPFE3 --> Finalizou Processamento: 2023-07-27 11:37:04.331484
+CPFE3 --> Tempo total de processamento: 0:00:46.639000
+--------------------------------------------------------------------------------
+CPLE6 --> Inicializou Processamento: 2023-07-27 11:37:07.978483
+CPLE6 --> Finalizou Processamento: 2023-07-27 11:38:09.689487
+CPLE6 --> Tempo total de processamento: 0:01:01.712003
+--------------------------------------------------------------------------------
+CRFB3 --> Inicializou Processamento: 2023-07-27 11:38:13.516566
+CRFB3 --> Finalizou Processamento: 2023-07-27 11:38:37.283484
+CRFB3 --> Tempo total de processamento: 0:00:23.768918
+--------------------------------------------------------------------------------
+CSAN3 --> Inicializou Processamento: 2023-07-27 11:38:39.009484
+CSAN3 --> Finalizou Processamento: 2023-07-27 11:39:23.508484
+CSAN3 --> Tempo total de processamento: 0:00:44.501001
+--------------------------------------------------------------------------------
+CSNA3 --> Inicializou Processamento: 2023-07-27 11:39:25.631485
+CSNA3 --> Finalizou Processamento: 2023-07-27 11:40:38.304484
+CSNA3 --> Tempo total de processamento: 0:01:12.673998
+--------------------------------------------------------------------------------
+CVCB3 --> Inicializou Processamento: 2023-07-27 11:40:41.886486
+CVCB3 --> Finalizou Processamento: 2023-07-27 11:41:13.362552
+CVCB3 --> Tempo total de processamento: 0:00:31.478069
+--------------------------------------------------------------------------------
+CYRE3 --> Inicializou Processamento: 2023-07-27 11:41:15.644552
+CYRE3 --> Finalizou Processamento: 2023-07-27 11:42:05.142551
+CYRE3 --> Tempo total de processamento: 0:00:49.499001
+--------------------------------------------------------------------------------
+DXCO3 --> Inicializou Processamento: 2023-07-27 11:42:06.478555
+DXCO3 --> Finalizou Processamento: 2023-07-27 11:43:02.761552
+DXCO3 --> Tempo total de processamento: 0:00:56.283999
+--------------------------------------------------------------------------------
+ECOR3 --> Inicializou Processamento: 2023-07-27 11:43:06.494554
+ECOR3 --> Finalizou Processamento: 2023-07-27 11:43:45.375551
+ECOR3 --> Tempo total de processamento: 0:00:38.881997
+--------------------------------------------------------------------------------
+EGIE3 --> Inicializou Processamento: 2023-07-27 11:43:47.358551
+EGIE3 --> Finalizou Processamento: 2023-07-27 11:44:49.682566
+EGIE3 --> Tempo total de processamento: 0:01:02.326002
+--------------------------------------------------------------------------------
+ELET3 --> Inicializou Processamento: 2023-07-27 11:44:52.574552
+ELET3 --> Finalizou Processamento: 2023-07-27 11:46:02.946553
+ELET3 --> Tempo total de processamento: 0:01:10.373002
+--------------------------------------------------------------------------------
+ELET6 --> Inicializou Processamento: 2023-07-27 11:46:05.310552
+ELET6 --> Finalizou Processamento: 2023-07-27 11:47:21.270554
+ELET6 --> Tempo total de processamento: 0:01:15.960999
+--------------------------------------------------------------------------------
+EMBR3 --> Inicializou Processamento: 2023-07-27 11:47:25.187564
+EMBR3 --> Finalizou Processamento: 2023-07-27 11:48:31.191553
+EMBR3 --> Tempo total de processamento: 0:01:06.004989
+--------------------------------------------------------------------------------
+ENBR3 --> Inicializou Processamento: 2023-07-27 11:48:33.385552
+ENBR3 --> Finalizou Processamento: 2023-07-27 11:49:19.163551
+ENBR3 --> Tempo total de processamento: 0:00:45.779999
+--------------------------------------------------------------------------------
+ENEV3 --> Inicializou Processamento: 2023-07-27 11:49:22.825552
+ENEV3 --> Finalizou Processamento: 2023-07-27 11:50:05.991552
+ENEV3 --> Tempo total de processamento: 0:00:43.167000
+--------------------------------------------------------------------------------
+ENGI11 --> Inicializou Processamento: 2023-07-27 11:50:07.864550
+ENGI11 --> Finalizou Processamento: 2023-07-27 11:50:38.756551
+ENGI11 --> Tempo total de processamento: 0:00:30.893004
+--------------------------------------------------------------------------------
+EQTL3 --> Inicializou Processamento: 2023-07-27 11:50:40.976552
+EQTL3 --> Finalizou Processamento: 2023-07-27 11:51:22.047592
+EQTL3 --> Tempo total de processamento: 0:00:41.072039
+--------------------------------------------------------------------------------
+EZTC3 --> Inicializou Processamento: 2023-07-27 11:51:24.191596
+EZTC3 --> Finalizou Processamento: 2023-07-27 11:52:07.081590
+EZTC3 --> Tempo total de processamento: 0:00:42.890994
+--------------------------------------------------------------------------------
+FLRY3 --> Inicializou Processamento: 2023-07-27 11:52:09.319590
+FLRY3 --> Finalizou Processamento: 2023-07-27 11:52:47.340589
+FLRY3 --> Tempo total de processamento: 0:00:38.023002
+--------------------------------------------------------------------------------
+GGBR4 --> Inicializou Processamento: 2023-07-27 11:52:49.180590
+GGBR4 --> Finalizou Processamento: 2023-07-27 11:53:58.145589
+GGBR4 --> Tempo total de processamento: 0:01:08.966000
+--------------------------------------------------------------------------------
+GOAU4 --> Inicializou Processamento: 2023-07-27 11:54:01.762588
+GOAU4 --> Finalizou Processamento: 2023-07-27 11:55:08.591591
+GOAU4 --> Tempo total de processamento: 0:01:06.831003
+--------------------------------------------------------------------------------
+GOLL4 --> Inicializou Processamento: 2023-07-27 11:55:12.537602
+GOLL4 --> Finalizou Processamento: 2023-07-27 11:56:01.554593
+GOLL4 --> Tempo total de processamento: 0:00:49.017988
+--------------------------------------------------------------------------------
+HAPV3 --> Inicializou Processamento: 2023-07-27 11:56:05.225588
+HAPV3 --> Finalizou Processamento: 2023-07-27 11:56:25.534591
+HAPV3 --> Tempo total de processamento: 0:00:20.310003
+--------------------------------------------------------------------------------
+HYPE3 --> Inicializou Processamento: 2023-07-27 11:56:27.349590
+HYPE3 --> Finalizou Processamento: 2023-07-27 11:57:08.205591
+HYPE3 --> Tempo total de processamento: 0:00:40.858001
+--------------------------------------------------------------------------------
+IGTI11 --> Inicializou Processamento: 2023-07-27 11:57:10.414590
