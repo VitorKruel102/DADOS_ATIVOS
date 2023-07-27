@@ -3,17 +3,21 @@ Criado: 10/07/2023 17:43
 
 Autor: Vitor Kruel.
 """
-from DADOS_ATIVOS.Sematiza_Core.utils.log_sematiza import LogPrintMixin
-
 import csv
 import os
+import sys
 import json
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
 from pandas_market_calendars import get_calendar
 from datetime import datetime
-from config import settings as _settings
+
+sys.path.insert(0, os.path.join(os.getcwd(), 'config'))
+import settings as _settings
+
+sys.path.insert(1, os.path.join(os.getcwd(), 'utils'))
+from log_sematiza import LogFileMixin, LogPrintMixin
 
 
 PRIMEIRA_DATA_COM_DADOS_NAO_AJUSTADO = 20211013
@@ -26,8 +30,12 @@ class Alertador:
         self.deletar_dados_antigos()
 
         self.inicio_processamento_global = datetime.now()
-        self.salva_log_desempenho(f'INICIALIZAÇÃO: {self.inicio_processamento_global}', reiniciar_arquivo=True)
-        self.salva_log_desempenho(f'{"-" * 80}', )
+        _log_inicializao = LogFileMixin(reiniciar_arquivo=True)
+        _log_inicializao.success(f'INICIALIZAÇÃO: {self.inicio_processamento_global}')
+        _log_inicializao.success(f'{"-" * 80}', )
+
+        self._log_no_arquivo = LogFileMixin()
+        self._log_print = LogPrintMixin()
 
         self.feriados_b3 = self.retornar_feriados_integrais_da_b3()
         self._estrutura_de_dados_com_erros = self.inicializa_campos_de_analise()
@@ -36,8 +44,8 @@ class Alertador:
         self.enviar_dados_intraday()
         self.finaliza_os_dados_estatisticos()    
 
-        self.salva_log_desempenho(f'FINALIZAÇÃO: {datetime.now()}.')
-        self.salva_log_desempenho(f'TEMPO TOTAL DE EXECUÇÃO: {datetime.now() - self.inicio_processamento_global}.')
+        self._log_no_arquivo.success(f'FINALIZAÇÃO: {datetime.now()}.')
+        self._log_no_arquivo.success(f'TEMPO TOTAL DE EXECUÇÃO: {datetime.now() - self.inicio_processamento_global}.')
 
     def deletar_dados_antigos(self):
         """."""
@@ -48,7 +56,7 @@ class Alertador:
     def enviar_dados_intraday(self) -> str:
         """Enviar dados do Intraday para a função gerenciar 
         comparações para validação dos dados."""
-        for path, _, arquivos in os.walk(_settings.DIRETORIO_PRINCIPAIS_ACOES):
+        for path, _, arquivos in os.walk(_settings.DIRETORIO_DADOS_PARA_AJUSTE):
             for arquivo in arquivos:
                 path_arquivo = os.path.join(path, arquivo)
 
@@ -63,7 +71,7 @@ class Alertador:
         dias_uteis_da_b3 = self.retorna_dias_uteis_b3(df_intraday)
         
         hora_inicial_do_processamento = datetime.now()
-        self.salva_log_desempenho(f'{nome_do_ticker} --> Inicializou Processamento: {hora_inicial_do_processamento}')
+        self._log_no_arquivo.success(f'{nome_do_ticker} --> Inicializou Processamento: {hora_inicial_do_processamento}')
 
         for dia in dias_uteis_da_b3:
             dia_int = int(dia.replace('-', '')) #Formato: AAAAMMDD
@@ -85,7 +93,7 @@ class Alertador:
             df_intraday_dia_atual = df_intraday[df_intraday['<date>'] == dia_int]
 
             if not self.tem_dados_no_dataframe(df_diario_dia_atual):
-                self.log_erro(f'{nome_do_ticker}: Não encontrato nos dados do Profit. (Data: {dia_int})')
+                self._log_print.error(f'{nome_do_ticker}: Não encontrato nos dados do Profit. (Data: {dia_int})')
                 continue
 
             _abertura_diario = round(df_diario_dia_atual['Abertura'].iloc()[0], 2)
@@ -142,27 +150,9 @@ class Alertador:
         self.salva_dados_no_diretorio_alertador(df_dados_com_problemas, f'{nome_do_ticker}_estudo.csv')  
         self.resetar_estrututa(self._estrutura_de_dados_com_erros) 
 
-        self.salva_log_desempenho(f'{nome_do_ticker} --> Finalizou Processamento: {datetime.now()}')
-        self.salva_log_desempenho(f'{nome_do_ticker} --> Tempo total de processamento: {datetime.now() - hora_inicial_do_processamento}')
-        self.salva_log_desempenho(f'{"-" * 80}', )
-
-    def log_erro(self, mensagem) -> None:
-        """Exibe na tela o erro."""
-        print(f'ERROR NO PROCESSAMENTO:')
-        print(mensagem)
-        print('-' * 50)
- 
-    def salva_log_desempenho(self, registro, reiniciar_arquivo=False) -> None:
-        """Salva na raiz do projeto o arquivo log-desempenho.txt responsável 
-        por registrar o desempenho em locais desejados."""
-        path_log = os.path.join(_settings.DIRETORIO_LOG)
-        if reiniciar_arquivo:
-            if os.path.exists(path_log):
-                os.remove(path_log)
-
-        with open(path_log, 'a', newline='', encoding='utf-8') as arquivo:
-            writer = csv.writer(arquivo)
-            writer.writerow([registro])
+        self._log_no_arquivo.success(f'{nome_do_ticker} --> Finalizou Processamento: {datetime.now()}')
+        self._log_no_arquivo.success(f'{nome_do_ticker} --> Tempo total de processamento: {datetime.now() - hora_inicial_do_processamento}')
+        self._log_no_arquivo.success(f'{"-" * 80}', )
 
     def retornar_feriados_integrais_da_b3(self) -> list:
         """Retorna dados do arquivo feriados-b3.json com todos os feriados integrais da b3."""
@@ -383,5 +373,3 @@ class Alertador:
         df_estatistica = pd.DataFrame(self._estrutura_estatistica)
         self.salva_dados_no_diretorio_alertador(df_estatistica, f'_Estatistica_Tickers.csv')    
 
-
-objeto = Alertador()
