@@ -228,3 +228,7 @@ MRFG3 --> Finalizou Processamento: 2023-07-28 10:17:31.437187
 MRFG3 --> Tempo total de processamento: 0:00:29.405578
 --------------------------------------------------------------------------------
 MRVE3 --> Inicializou Processamento: 2023-07-28 10:17:32.465266
+MRVE3 --> Finalizou Processamento: 2023-07-28 10:18:00.749961
+MRVE3 --> Tempo total de processamento: 0:00:28.284695
+--------------------------------------------------------------------------------
+MULT3 --> Inicializou Processamento: 2023-07-28 10:18:01.888362
