@@ -30,11 +30,12 @@ class Alertador:
         self.deletar_dados_antigos()
 
         self.inicio_processamento_global = datetime.now()
-        _log_inicializao = LogFileMixin(reiniciar_arquivo=True)
+        _log_inicializao = LogFileMixin('log-desempenho-alertador.txt', reiniciar_arquivo=True)
         _log_inicializao.success(f'INICIALIZAÇÃO: {self.inicio_processamento_global}')
-        _log_inicializao.success(f'{"-" * 80}', )
-
-        self._log_no_arquivo = LogFileMixin()
+       
+        self._log_no_arquivo = LogFileMixin('log-desempenho-alertador.txt')
+        self._log_no_arquivo.success(f'{"-" * 80}', )
+        
         self._log_print = LogPrintMixin()
 
         self.feriados_b3 = self.retornar_feriados_integrais_da_b3()
