@@ -26,14 +26,15 @@ class Log(ABC):
 class LogFileMixin(Log):
 
 
-    def __init__(self, reiniciar_arquivo=False):
+    def __init__(self, nome_arquivo , reiniciar_arquivo=False):
         self.reiniciar_arquivo  = reiniciar_arquivo
+        self.nome_arquivo = nome_arquivo
 
     def _log(self, mensagem):
         """."""
         mensagem_formatada = f'{mensagem}'
 
-        path_log = os.path.join(_settings.DIRETORIO_LOG)
+        path_log = os.path.join(_settings.DIRETORIO_LOG, self.nome_arquivo)
         if self.reiniciar_arquivo:
             if os.path.exists(path_log):
                 os.remove(path_log)
