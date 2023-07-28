@@ -3,15 +3,27 @@ import shutil
 import os
 import pandas as pd
 
+from datetime import datetime
+
 from config import settings as _settings
 
 from sematiza.Sematiza_ConcatenaTrocaDeTicker import ConcatenaTrocaAtivos
 from sematiza.Sematiza_Alertador import Alertador
 
+from utils.log_sematiza import LogFileMixin 
+
 class ManageSematiza:
 
 
     def __init__(self) -> None:
+        self.inicio_processamento_global = datetime.now()
+        self._log_inicializacao = LogFileMixin('log-desempenho-main.txt', reiniciar_arquivo=True)
+    
+        self._log_inicializacao.success(f'INICIALIZAÇÃO: {self.inicio_processamento_global}')
+        
+        self._log_arquivo = LogFileMixin('log-desempenho-main.txt')
+        self._log_arquivo.success(f'{"-" * 80}')
+
         self.remover_arquivos_do_diretorio(_settings.DIRETORIO_DADOS_PARA_AJUSTE)
         
         ativos_de_interesse = self.retorna_listas_de_tickers_de_interesse()
@@ -21,8 +33,20 @@ class ManageSematiza:
             ativos_de_interesse,
         )
 
-        ConcatenaTrocaAtivos()
+        self._log_arquivo.success(f'INICIO DO CONCATENA TROCA DE ATIVOS: {datetime.now()}.')
+        ConcatenaTrocaAtivos() # "IGTI11", "IGTA3",
+        self._log_arquivo.success(f'FINALIZAÇÃO DO CONCATENA TROCA DE ATIVOS: {datetime.now()}.')
+        self._log_arquivo.success(f'{"-" * 80}')
+
+        self._log_arquivo.success(f'INICIO DO ALERTADOR: {datetime.now()}.')
         Alertador()
+        self._log_arquivo.success(f'FINALIZAÇÃO DO ALERTADOR: {datetime.now()}.')
+        self._log_arquivo.success(f'{"-" * 80}')
+
+
+        self._log_arquivo.success(f'FINALIZAÇÃO: {datetime.now()}.')
+        self._log_arquivo.success(f'TEMPO TOTAL DE EXECUÇÃO: {datetime.now() - self.inicio_processamento_global}.')
+
 
     def remover_arquivos_do_diretorio(self, path_diretorio) -> None:
         """."""
