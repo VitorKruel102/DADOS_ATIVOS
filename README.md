@@ -95,10 +95,6 @@ entre as comparações de fechamento e abertura, bem como a diferença em relaç
 Ao final, será gerado um relatório geral com todos os ativos e suas respectivas integridades em porcentagem.
 
 
-- Sematiza_Ajustador: Responsável por realizar ajustes nos dados do intraday.
-- Sematiza_Ajustador: Responsável por realizar ajustes nos dados do intraday.
-- Sematiza_Ajustador: Responsável por realizar ajustes nos dados do intraday.
-
 ### Sematiza_ConcatenaTrocaDeTicker: 
 
 - Responsável por concatenar os dados dos ativos que mudaram de nomes.
