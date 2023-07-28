@@ -22,7 +22,7 @@ PATH_ARQUIVO_FERIADOS = os.path.join(BASE_DIR, 'feriados-b3.json')
 PATH_ATIVOS_QUE_MUDARAM_NOME = os.path.join(BASE_DIR, 'ativos-mudaram-ticker.json')
 PATH_ARQUIVO_DADOS_INTERESSE = os.path.join(BASE_DIR, 'dados-interesse.json')
 
-DIRETORIO_LOG = os.path.join(BASE_DIR, 'log', 'log-desempenho-alertador.txt')
+DIRETORIO_LOG = os.path.join(BASE_DIR, 'log')
 
 
 
