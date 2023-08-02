@@ -43,7 +43,7 @@ class ConcatenaTrocaAtivos:
         for ticker_antigo, ticker_novo in self.ativos_de_interesse.items():
 
             if not self.existe_ativo_no_diretorio_dados_para_ajuste(ticker_antigo):
-                self._log_file.error(f'NÃO FOI ENCONTRATO O ATIVO {ticker_antigo}')
+                self._log_file.error(f'NÃO FOI ENCONTRADO O ATIVO {ticker_antigo}')
                 self._log_file.success(f'{"-" * 80}')
                 continue
 
