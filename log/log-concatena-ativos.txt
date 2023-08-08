@@ -2,7 +2,7 @@ INICIALIZAÇÃO
 --------------------------------------------------------------------------------
 DADOS PROCESSADO: BRDT3 ---> VBBR3
 --------------------------------------------------------------------------------
-ERROR NO PROCESSAMENTO: NÃO FOI ENCONTRATO O ATIVO IGTA3
+ERROR NO PROCESSAMENTO: NÃO FOI ENCONTRADO O ATIVO IGTA3
 --------------------------------------------------------------------------------
-DADOS PROCESSADO: LAME4 ---> AMER3
+ERROR NO PROCESSAMENTO: NÃO FOI ENCONTRADO O ATIVO LAME4
 --------------------------------------------------------------------------------
